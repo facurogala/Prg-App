@@ -11,8 +11,7 @@ export const styles = StyleSheet.create({
   containerHomeCalculatorInput: {
     alignItems: "center",
     justifyContent: "center",
-    padding: 30,
-    top: -170,
+    padding: 1,
     backgroundColor: "#0D1520",
   },
   welcomeText: {
@@ -43,24 +42,25 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 22,
   },
+  mainContainer: {
+    flex: 1,
+    justifyContent: "flex-start", // Asegura que los elementos estén visibles al principio de la pantalla
+    alignItems: "center", // Centra horizontalmente
+    backgroundColor: "#0D1520",
+  },
   PrgVerde: {
-    height: 40,
-    width: 160,
-    marginTop: 40,
-    alignSelf: "center",
-    right: 80,
-    marginBottom: 22,
+    width: 130,
+    height: 100,
+    resizeMode: "contain",
+    marginVertical: 20,
+    right: 95,
   },
   Calcula1Rmhead: {
-    height: 40,
-    width: 160,
-    marginTop: -15,
-    alignSelf: "center",
-    marginBottom: 52,
-    right: 70,
+    fontSize: 16,
     color: "white",
-    fontWeight: 'bold',
-    fontSize: 20,
+    marginTop: -90,
+    right: 100,
+    padding: 45,
   },
   ButtonBack: {
     position: "absolute",
@@ -75,14 +75,14 @@ export const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginVertical: 100,
+    marginVertical: -10,
     paddingHorizontal: 10,
     
   },
   inputWrapper: {
-    flexGrow: 1,
+  
     position: 'relative',
-    width: 140, // Ancho específico de los inputs
+    width: 122, // Ancho específico de los inputs
     height: 52, // Alto específico de los inputs
     backgroundColor: '#2b303b', // Fondo oscuro como en la imagen
     borderRadius: 8, // Bordes redondeados
@@ -99,25 +99,27 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: 'gray', // Color de las letras pequeñas "Kg" y "Reps"
   },
-  textInput: {
+  textInputKgReps: {
     flex: 1,
     color: 'white', // Color del texto dentro del input
     textAlign: 'center',
-    fontSize: 24, // Tamaño de la fuente del texto dentro del input
+    fontSize: 25, // Tamaño de la fuente del texto dentro del input
     fontWeight: 'bold',
     paddingLeft: 30, // Aumenta el padding para evitar que el texto del input cubra la etiqueta
+    right: 15,
+    
   },
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    padding: 1,
-    marginTop: -45,
+    padding: 10,
+    marginTop:40,
   },
   gridItem: {
     width: 60.87,
     height: 86.49,
-    marginVertical: 3,
+    marginVertical: 15,
     backgroundColor: '#2b303b',
     borderRadius: 8,
     alignItems: 'center',
@@ -126,7 +128,7 @@ export const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   repsText: {
-    color: 'white',
+    color: '#DBFF00',
     fontSize: 16,
     fontWeight: "bold",
     

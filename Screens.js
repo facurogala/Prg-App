@@ -94,53 +94,56 @@ export const HomeScreen = ({ navigation }) => {
     }
   }, [kg, reps]);
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1 }}>
-      <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
-      <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
-  
-      <View style={styles.containerHomeCalculatorInput}>
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <Text style={styles.labelText}>Kg</Text>
-            <TextInput
-              style={styles.textInput}
-              onChangeText={(text) => setKg(text)}
-              value={kg}
-              placeholder="250"
-              keyboardType="numeric"
-              placeholderTextColor="white"
-            />
+ return (
+    <KeyboardAvoidingView style={styles.mainContainer}>
+      {/* Asegúrate de que el contenedor principal tenga un estilo adecuado */}
+      <View style={styles.mainContainer}>
+        {/* Imagen y encabezado que deben aparecer en la pantalla */}
+        <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
+        <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
+
+        <View style={styles.containerHomeCalculatorInput}>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.labelText}>Kg</Text>
+              <TextInput
+                style={styles.textInputKgReps}
+                onChangeText={(text) => setKg(text)}
+                value={kg}
+                placeholder="250"
+                keyboardType="numeric"
+                placeholderTextColor="white"
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.labelText}>Reps</Text>
+              <TextInput
+                style={styles.textInputKgReps}
+                onChangeText={(text) => setReps(text)}
+                value={reps}
+                placeholder="6"
+                keyboardType="numeric"
+                placeholderTextColor="white"
+              />
+            </View>
           </View>
-          <View style={styles.inputWrapper}>
-            <Text style={styles.labelText}>Reps</Text>
-            <TextInput
-              style={styles.textInput}
-              onChangeText={(text) => setReps(text)}
-              value={reps}
-              placeholder="6"
-              keyboardType="numeric"
-              placeholderTextColor="white"
-            />
-          </View>
+
+          {oneRM && estimations.length > 0 && (
+            <View style={styles.gridContainer}>
+              {estimations.map((item) => (
+                <View key={item.reps} style={styles.gridItem}>
+                  <Text style={styles.repsText}>{item.reps}RM</Text>
+                  <Text style={styles.weightText}>{item.weight}</Text>
+                  <Text style={styles.kgText}>kg</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-  
-        {oneRM && estimations.length > 0 && (
-          <View style={styles.gridContainer}>
-            {estimations.map((item) => (
-              <View key={item.reps} style={styles.gridItem}>
-                <Text style={styles.repsText}>{item.reps}RM</Text>
-                <Text style={styles.weightText}>{item.weight}</Text>
-                <Text style={styles.kgText}>kg</Text>
-              </View>
-            ))}
-          </View>
-        )}
       </View>
     </KeyboardAvoidingView>
   );
 };
-
 
 export const SettingsScreen = ({ navigation }) => {
   return (
