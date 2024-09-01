@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/airstrike.ttf",
+      "sha1": "4706246106e4dc616a698910133b88f820f56e53"
+    },
+    {
+      "path": "assets/fonts/airstrikebold.ttf",
+      "sha1": "3f01476fa2bb48c461db644c7d1552a20a08001d"
+    },
+    {
+      "path": "assets/fonts/airstrikecond.ttf",
+      "sha1": "d822fa642a4ec46241ecf855c676ba8457027427"
+    },
+    {
+      "path": "assets/fonts/airstrikeexpand.ttf",
+      "sha1": "12f0cba30272e8380e947614c0e873c1aa779dfb"
+    }
+  ]
+}
