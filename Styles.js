@@ -2,6 +2,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
+
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -55,18 +56,20 @@ export const styles = StyleSheet.create({
   },
   PrgVerde: {
     position: 'absolute',
-    top: 25,
+    top: 15,
     width: width * 0.4,
     height: height * 0.1,
     resizeMode: 'contain',
     zIndex: 1,
+    marginBottom: 2222,
   },
      Calcula1Rmhead: {
     fontSize: width * 0.05,
     color: 'white',
-    marginTop: height * 0.12, // Ajusta el espacio debajo de la imagen PRG
+    marginTop: height * 0.10, // Ajusta el espacio debajo de la imagen PRG
     paddingHorizontal: width * 0.1,
     textAlign: 'center',
+    marginBottom: height * 0.02,
   },
   ButtonBack: {
     position: "absolute",
@@ -114,6 +117,7 @@ export const styles = StyleSheet.create({
     fontSize: width * 0.1,
     fontWeight: 'bold',
     resizeMode: "contain",
+    
   },
   gridContainer: {
     flexDirection: 'row',
@@ -123,17 +127,18 @@ export const styles = StyleSheet.create({
     marginTop: height * 0.02,
     width: '100%',
     height: height * 0.4, // Ajusta según lo que necesites
-
   },
   gridItem: {
-    width: '22%',
-    height: height * 0.1,
+    width: width * 0.22, // Ajusta el tamaño relativo al ancho de la pantalla
+    height: height * 0.12, // Ajusta el tamaño relativo al alto de la pantalla
     marginVertical: height * 0.01,
     backgroundColor: '#2b303b',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 1,
   },
+    
   repsText: {
     color: '#D9E92C',
     fontSize: width * 0.05,
@@ -143,7 +148,7 @@ export const styles = StyleSheet.create({
     fontSize: width * 0.065,
     color: 'white',
     fontWeight: 'bold',
-    marginTop: height * 0.005,
+    marginTop: height * 0.002,
   },
   kgText: {
     marginBottom: -2,
@@ -203,13 +208,25 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
   },
   containerNavBar: {
-    marginTop: 112,
-    bottom: 70,
+    bottom: 60,
     backgroundColor: "#0D1520",
-    height: 50,
+    height: -100,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: 'space-between',
+    position: "absolute",
   },
+navHome: {
+  marginHorizontal: 20, // Ajusta el margen según tus necesidades
+},
+Chart: {
+  marginHorizontal: 20,
+},
+porcentaje: {
+  marginHorizontal: 20,
+},
+Profile: {
+  marginHorizontal: 20,
+},
 });

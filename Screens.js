@@ -9,7 +9,6 @@ import {
   BackHandler,
 } from "react-native";
 import ConfigIcon from "./assets/tuerca.svg";
-import ButtonBackIcon from "./assets/ButtonBackIcon.svg";
 import NavHome from './assets/navHome.svg';
 import Chart from './assets/Chart.svg'; 
 import Porcentaje from './assets/porcentaje.svg'; 
@@ -69,7 +68,7 @@ export const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate("Login");
+      navigation.navigate("Home");
       return true;
     };
 
@@ -146,19 +145,19 @@ export const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.containerNavBar}>
-        <TouchableOpacity style={styles.navHome} onPress={() => navigation.navigate("Home")}>
-          <NavHome width={24} height={24} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.Chart} onPress={() => navigation.navigate("Search")}>
-          <Chart width={24} height={24} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.porcentaje} onPress={() => navigation.navigate("Notifications")}>
-          <Porcentaje width={24} height={24} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.Profile} onPress={() => navigation.navigate("Profile")}>
-          <Profile width={24} height={24} />
-        </TouchableOpacity>
-      </View>
+  <TouchableOpacity style={styles.navHome} onPress={() => navigation.navigate("Home")}>
+    <NavHome width={34} height={34} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.Chart} onPress={() => navigation.navigate("Chart")}>
+    <Chart width={34} height={34} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.porcentaje} onPress={() => navigation.navigate("Porcentaje")}>
+    <Porcentaje width={34} height={34} />
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.Profile} onPress={() => navigation.navigate("Profile")}>
+    <Profile width={34} height={34} />
+  </TouchableOpacity>
+</View>
     </KeyboardAvoidingView>
 
 
@@ -175,6 +174,31 @@ export const SettingsScreen = ({ navigation }) => {
       >
         <ButtonBackIcon width={24} height={24} />
       </TouchableOpacity>
+    </View>
+  );
+};
+
+// Pantalla Chart
+export const ChartScreen = ({ navigation }) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Chart Screen</Text>
+    </View>
+  );
+};
+
+export const PorcentajeScreen = ({ navigation }) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Porcentaje Screen</Text>
+    </View>
+  );
+};
+
+export const ProfileScreen = ({ navigation }) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Profile Screen</Text>
     </View>
   );
 };

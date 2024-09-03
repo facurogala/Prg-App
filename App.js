@@ -4,7 +4,7 @@ import {
   createStackNavigator,
   TransitionPresets,
 } from "@react-navigation/stack";
-import { Login, HomeScreen, SettingsScreen, boutScreen } from "./Screens"; // Importar pantallas desde Screens.js
+import { Login, HomeScreen, SettingsScreen, ChartScreen, PorcentajeScreen, ProfileScreen } from "./Screens"; // Importar pantallas desde Screens.js
 
 
 
@@ -31,7 +31,7 @@ const App = () => {
             TransitionPresets.FadeFromBottomAndroid.cardStyleInterpolator, // Aplicar la transición deseada
         }}
       >
-        <Stack.Screen
+     <Stack.Screen
           name="Login"
           component={Login}
           options={{ title: "Inicio", headerShown: false }}
@@ -44,7 +44,22 @@ const App = () => {
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{ title: "Configuración", headerShown: false }}
+          options={{ title: "Configuración", headerShown: false  }}
+        />
+         <Stack.Screen
+          name="Chart"
+          component={ChartScreen}
+          options={{ title: "Chart", headerShown: false  }}
+        />
+        <Stack.Screen
+          name="Porcentaje"
+          component={PorcentajeScreen}
+          options={{ title: "Porcentaje", headerShown: false  }}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ title: "Profile", headerShown: false  }}
         />
       </Stack.Navigator>
     </NavigationContainer>
