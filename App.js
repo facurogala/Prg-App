@@ -4,7 +4,10 @@ import {
   createStackNavigator,
   TransitionPresets,
 } from "@react-navigation/stack";
-import { Login, HomeScreen, SettingsScreen } from "./Screens"; // Importar pantallas desde Screens.js
+import { Login, HomeScreen, SettingsScreen, boutScreen } from "./Screens"; // Importar pantallas desde Screens.js
+
+
+
 
 const Stack = createStackNavigator();
 

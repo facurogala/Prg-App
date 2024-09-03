@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import ConfigIcon from "./assets/tuerca.svg";
 import ButtonBackIcon from "./assets/ButtonBackIcon.svg";
+import NavHome from './assets/navHome.svg';
+import Chart from './assets/Chart.svg'; 
+import Porcentaje from './assets/porcentaje.svg'; 
+import Profile from './assets/Profile.svg'; 
 import { styles } from "./Styles";
 
 export const Login = ({ navigation }) => {
@@ -17,7 +21,7 @@ export const Login = ({ navigation }) => {
     <View style={styles.container}>
       <Image
         style={styles.PRG}
-        source={require("./assets/Calavera 2 normal.png")}
+        source={require("./assets/Calavera_2_normal-removebg-preview.png")}
       />
       <Text style={styles.welcomeText}>Trackea tu Progreso.</Text>
       <Text style={styles.SubTitulo}>
@@ -94,54 +98,70 @@ export const HomeScreen = ({ navigation }) => {
     }
   }, [kg, reps]);
 
- return (
+  return (
     <KeyboardAvoidingView style={styles.mainContainer}>
-      {/* Asegúrate de que el contenedor principal tenga un estilo adecuado */}
-      <View style={styles.mainContainer}>
-        {/* Imagen y encabezado que deben aparecer en la pantalla */}
-        <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
-        <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
+    {/* Asegúrate de que el contenedor principal tenga un estilo adecuado */}
+    <View style={styles.mainContainer}>
+          <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
+          <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
 
-        <View style={styles.containerHomeCalculatorInput}>
-          <View style={styles.inputContainer}>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.labelText}>Kg</Text>
-              <TextInput
-                style={styles.textInputKgReps}
-                onChangeText={(text) => setKg(text)}
-                value={kg}
-                placeholder="250"
-                keyboardType="numeric"
-                placeholderTextColor="white"
-              />
+          <View style={styles.containerHomeCalculatorInput}>
+            <View style={styles.inputContainerTodo}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.labelText}>Kg</Text>
+                <TextInput
+                  style={styles.textInputKgReps}
+                  onChangeText={(text) => setKg(text)}
+                  value={kg}
+                  placeholder="250"
+                  keyboardType="numeric"
+                  placeholderTextColor="white"
+                />
+              </View>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.labelText}>Reps</Text>
+                <TextInput
+                  style={styles.textInputKgReps}
+                  onChangeText={(text) => setReps(text)}
+                  value={reps}
+                  placeholder="6"
+                  keyboardType="numeric"
+                  placeholderTextColor="white"
+                />
+              </View>
             </View>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.labelText}>Reps</Text>
-              <TextInput
-                style={styles.textInputKgReps}
-                onChangeText={(text) => setReps(text)}
-                value={reps}
-                placeholder="6"
-                keyboardType="numeric"
-                placeholderTextColor="white"
-              />
-            </View>
+
+            {oneRM && estimations.length > 0 && (
+              <View style={styles.gridContainer}>
+                {estimations.map((item) => (
+                  <View key={item.reps} style={styles.gridItem}>
+                    <Text style={styles.repsText}>{item.reps}RM</Text>
+                    <Text style={styles.weightText}>{item.weight}</Text>
+                    <Text style={styles.kgText}>kg</Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
-
-          {oneRM && estimations.length > 0 && (
-            <View style={styles.gridContainer}>
-              {estimations.map((item) => (
-                <View key={item.reps} style={styles.gridItem}>
-                  <Text style={styles.repsText}>{item.reps}RM</Text>
-                  <Text style={styles.weightText}>{item.weight}</Text>
-                  <Text style={styles.kgText}>kg</Text>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
+
+        <View style={styles.containerNavBar}>
+        <TouchableOpacity style={styles.navHome} onPress={() => navigation.navigate("Home")}>
+          <NavHome width={24} height={24} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.Chart} onPress={() => navigation.navigate("Search")}>
+          <Chart width={24} height={24} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.porcentaje} onPress={() => navigation.navigate("Notifications")}>
+          <Porcentaje width={24} height={24} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.Profile} onPress={() => navigation.navigate("Profile")}>
+          <Profile width={24} height={24} />
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
+
+
   );
 };
 
