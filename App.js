@@ -1,89 +1,73 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ProfileScreen, HomeScreen, SettingsScreen, ChartScreen, PercentagejeScreen } from './Screens';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { ProfileScreen, HomeScreen, ChartScreen, PercentagejeScreen } from './Screens';
+import HomeIcon from './assets/Home.svg';
+import PercentageIcon from './assets/Percentage.svg';
+import ChartIcon from './assets/Chart.svg';
+import ProfileIcon from './assets/Profile.svg';
 
-// Creación de los navegadores
-const Stack = createStackNavigator();
+// Creación del navegador de pestañas inferior
 const Tab = createBottomTabNavigator();
 
-// Estilos para la navegación
-const navigationStyles = {
-  tabBarStyle: {
-    backgroundColor: '#0D1520',
-  },
-};
+// Componente principal con la barra de navegación inferior
+const App = () => (
+  <NavigationContainer>
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarStyle: {
+          backgroundColor: '#0D1520', // Color de fondo de la barra de navegación
+          borderTopWidth: 0, // Quita el borde superior
+          borderTopColor: 'transparent', // Asegúrate de que el color del borde sea transparente
+        },
+        tabBarHideOnKeyboard: true,
+        headerShown: false,
+        tabBarIcon: ({ color, size }) => {
+          let Icon;
 
-// Estilos para la barra de navegación inferior
-const bottomTabStyles = {
-  tabBarStyle: {
-    backgroundColor: '#0D1520',
-  },
-};
+          switch (route.name) {
+            case 'HomeTab':
+              Icon = HomeIcon;
+              break;
+            case 'PorcentajeTab':
+              Icon = PercentageIcon;
+              break;
+            case 'ChartTab':
+              Icon = ChartIcon;
+              break;
+            case 'ProfileTab':
+              Icon = ProfileIcon;
+              break;
+            default:
+              Icon = HomeIcon;
+              break;
+          }
 
-const BottomTabNavigator = () => (
-  <Tab.Navigator screenOptions={bottomTabStyles}>
-    <Tab.Screen
-      name="HomeTab"
-      component={HomeScreen}
-      options={{ title: 'Inicio', headerShown: false }}
-    />
-    <Tab.Screen
-      name="PorcentajeTab"
-      component={PercentagejeScreen}
-      options={{ title: 'Porcentaje', headerShown: false }}
-    />
-    <Tab.Screen
-      name="ChartTab"
-      component={ChartScreen}
-      options={{ title: 'Chart', headerShown: false }}
-    />
-    <Tab.Screen
-      name="ProfileTab"
-      component={ProfileScreen}
-      options={{ title: 'Perfil', headerShown: false }}
-    />
-  </Tab.Navigator>
+          return <Icon width={size} height={size} style={{ color: color }} />;        },
+      })}
+    >
+      <Tab.Screen
+        name="HomeTab"
+        component={HomeScreen}
+        options={{ title: '' }}
+      />
+      <Tab.Screen
+        name="PorcentajeTab"
+        component={PercentagejeScreen}
+        options={{ title: '' }}
+      />
+      <Tab.Screen
+        name="ChartTab"
+        component={ChartScreen}
+        options={{ title: '' }}
+      />
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileScreen}
+        options={{ title: '' }}
+      />
+    </Tab.Navigator>
+  </NavigationContainer>
 );
-
-// Estilos para la pantalla principal
-const appStyles = {
-  flex: 1,
-};
-
-// Componente principal
-const App = () => {
-  return (
-    <KeyboardAvoidingView style={appStyles} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <NavigationContainer theme={{ colors: { background: '#000' } }}>
-        <Stack.Navigator
-          initialRouteName="BottomTabs"
-          screenOptions={{
-            headerShown: false,
-            headerStyle: {
-              backgroundColor: '#0D1520',
-            },
-            headerTintColor: '#FFF',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-            cardOverlayStyle: {
-              backgroundColor: '#0D1520',
-            },
-            cardStyleInterpolator: TransitionPresets.FadeFromBottomAndroid.cardStyleInterpolator,
-          }}
-        >
-          <Stack.Screen
-            name="BottomTabs"
-            component={BottomTabNavigator}
-            options={{ title: 'Inicio', headerShown: false }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </KeyboardAvoidingView>
-  );
-};
 
 export default App;
