@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { SettingsScreen } from './Screens';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,7 +12,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: width * 0.05,
-     marginTop: height * 0.02,
+    marginTop: height * 0.02,
   },
   containerHomeCalculatorInput: {
     flex: 1,
@@ -19,6 +20,8 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#0D1520",
     marginBottom: -50,
+    marginTop: height * 0.02,
+    
   },
   welcomeText: {
     fontSize: width * 0.05,
@@ -53,7 +56,7 @@ export const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     backgroundColor: "#0D1520",
-    marginBottom: -55,
+
   },
   PrgVerde: {
     position: 'absolute',
@@ -62,15 +65,18 @@ export const styles = StyleSheet.create({
     height: height * 0.1,
     resizeMode: 'contain',
     zIndex: 1,
-    marginBottom: 2222,
+    marginBottom: height * 0.013,
   },
      Calcula1Rmhead: {
     fontSize: width * 0.05,
     color: 'white',
-    marginTop: height * 0.10, // Ajusta el espacio debajo de la imagen PRG
+    marginTop: height * 0.09, // Ajusta el espacio debajo de la imagen PRG
     paddingHorizontal: width * 0.1,
     textAlign: 'center',
-    marginBottom: height * 0.02,
+    marginBottom: height * 0.001,
+    fontWeight: "bold",
+    position: 'relative',
+
 
   },
   iconButton: {
@@ -96,11 +102,12 @@ export const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: width * 0.01,
     height: height * 0.08,
-    backgroundColor: '#2b303b',
+    backgroundColor: '#212836',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 15,
+
   },
   labelText: {
     position: 'absolute',
@@ -125,15 +132,15 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     paddingHorizontal: width * 0.03,
-    marginTop: height * 0.02,
+    marginTop: height * 0.005,
     width: '100%',
-    height: height * 0.4, // Ajusta según lo que necesites
+    height: height * 0.1, // Ajusta según lo que necesites
   },
   gridItem: {
-    width: width * 0.22, // Ajusta el tamaño relativo al ancho de la pantalla
-    height: height * 0.12, // Ajusta el tamaño relativo al alto de la pantalla
+    width: width * 0.21, // Ajusta el tamaño relativo al ancho de la pantalla
+    height: height * 0.11, // Ajusta el tamaño relativo al alto de la pantalla
     marginVertical: height * 0.01,
-    backgroundColor: '#2b303b',
+    backgroundColor: '#212836',
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -146,7 +153,7 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   weightText: {
-    fontSize: width * 0.065,
+    fontSize: width * 0.080,
     color: 'white',
     fontWeight: 'bold',
     marginTop: height * 0.002,
@@ -231,24 +238,37 @@ Profile: {
   marginHorizontal: 20,
 },
 containerChart: {
-  flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
+  flex: 1, 
     backgroundColor: '#0D1520', // Cambia el color de fondo a verde
     justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
     alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
 },
 
-containerPercengaje: {
+containerPercentage: {
   flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
     backgroundColor: '#0D1520', // Cambia el color de fondo a verde
     justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
     alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
   },
   containerProfile: {
-    flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
+    flex: 1, 
       backgroundColor: '#0D1520', // Cambia el color de fondo a verde
       justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
       alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
     },
+    containerChart: {
+      flex: 1, 
+        backgroundColor: '#0D1520', // Cambia el color de fondo a consumo
+        justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
+        alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
+      },
+   
+      containerSetting: {
+        flex: 1, 
+          backgroundColor: '#0D1520', // Cambia el color de fondo a verde
+          justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
+          alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
+        },
     settingButton: {
      position: "absolute",
       backgroundColor: "white",
@@ -257,7 +277,7 @@ containerPercengaje: {
       height: 30, 
       justifyContent: "center",
       alignItems: "center",
-       
       },
+   
 
 });

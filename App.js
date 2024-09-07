@@ -1,10 +1,11 @@
 // App.js
 import React from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'react-native';
-import { HomeScreen, ProfileScreen, ChartScreen, PercentagejeScreen, SettingsScreen } from './Screens'; // Asegúrate de importar SettingsScreen
+import { HomeScreen, ProfileScreen, ChartScreen, PercentageScreen, SettingsScreen } from './Screens'; // Asegúrate de importar SettingsScreen
 import HomeIcon from './assets/Home.svg';
 import PercentageIcon from './assets/Percentage.svg';
 import ChartIcon from './assets/Chart.svg';
@@ -14,11 +15,32 @@ import ProfileIcon from './assets/Profile.svg';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+const DetailsScreen = () => {
+  const navigation = useNavigation();
+
+  React.useEffect(() => {
+    const backAction = () => {
+      navigation.goBack(); // Navega a la pantalla anterior
+      return true; // Indica que el back press ha sido manejado
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove(); // Limpia el listener cuando el componente se desmonte
+  }, [navigation]);
+
+  return (
+    <View>
+      <Text>Details Screen</Text>
+    </View>
+  );
+};
+
 // Configuración del Stack Navigator
 const MainStackNavigator = () => (
   <Stack.Navigator>
     <Stack.Screen name="MainTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
-    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: true, title: 'Configuración' }} />
+    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false}} />
   </Stack.Navigator>
 );
 
@@ -40,7 +62,7 @@ const BottomTabNavigator = () => (
           case 'HomeTab':
             Icon = HomeIcon;
             break;
-          case 'PorcentajeTab':
+          case 'PercentageTab':
             Icon = PercentageIcon;
             break;
           case 'ChartTab':
@@ -59,7 +81,7 @@ const BottomTabNavigator = () => (
     })}
   >
     <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: '', headerShown: false }} />
-    <Tab.Screen name="PorcentajeTab" component={PercentagejeScreen} options={{ title: '', headerShown: false }} />
+    <Tab.Screen name="PercentageTab" component={PercentageScreen} options={{ title: '', headerShown: false }} />
     <Tab.Screen name="ChartTab" component={ChartScreen} options={{ title: '', headerShown: false }} />
     <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ title: '', headerShown: false }} />
   </Tab.Navigator>

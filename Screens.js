@@ -128,9 +128,9 @@ export const ChartScreen = ({ navigation }) => {
 
 
 
-export const PercentagejeScreen = ({ navigation }) => {
+export const PercentageScreen = ({ navigation }) => {
   return (
-    <View style={styles.containerPercengaje}>
+    <View style={styles.containerPercentage}>
       <Text style={styles.title}>Porcentaje Screen</Text>
     </View>
   );
