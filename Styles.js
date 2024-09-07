@@ -4,6 +4,7 @@ const { width, height } = Dimensions.get('window');
 
 
 export const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
     backgroundColor: "#0D1520",
@@ -103,6 +104,7 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 15,
   },
   labelText: {
     position: 'absolute',
@@ -117,6 +119,10 @@ export const styles = StyleSheet.create({
     fontSize: width * 0.1,
     fontWeight: 'bold',
     resizeMode: "contain",
+    flex: 1,
+   
+    paddingHorizontal: 35,
+  
     
   },
   gridContainer: {
@@ -229,4 +235,23 @@ porcentaje: {
 Profile: {
   marginHorizontal: 20,
 },
+containerChart: {
+  flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
+    backgroundColor: '#0D1520', // Cambia el color de fondo a verde
+    justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
+    alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
+},
+
+containerPercengaje: {
+  flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
+    backgroundColor: '#0D1520', // Cambia el color de fondo a verde
+    justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
+    alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
+  },
+  containerProfile: {
+    flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
+      backgroundColor: '#0D1520', // Cambia el color de fondo a verde
+      justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
+      alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
+    },
 });

@@ -98,58 +98,55 @@ export const HomeScreen = ({ navigation }) => {
   }, [kg, reps]);
 
   return (
-    <KeyboardAvoidingView style={styles.mainContainer}>
-    {/* Asegúrate de que el contenedor principal tenga un estilo adecuado */}
-    <View style={styles.mainContainer}>
-          <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
-          <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
+    <KeyboardAvoidingView style={styles.mainContainer} behavior="padding">
+      <View style={styles.mainContainer}>
+        <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
+        <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
 
-          <View style={styles.containerHomeCalculatorInput}>
-            <View style={styles.inputContainerTodo}>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.labelText}>Kg</Text>
-                <TextInput
-                  style={styles.textInputKgReps}
-                  onChangeText={(text) => setKg(text)}
-                  value={kg}
-                  placeholder="250"
-                  keyboardType="numeric"
-                  placeholderTextColor="white"
-                />
-              </View>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.labelText}>Reps</Text>
-                <TextInput
-                  style={styles.textInputKgReps}
-                  onChangeText={(text) => setReps(text)}
-                  value={reps}
-                  placeholder="6"
-                  keyboardType="numeric"
-                  placeholderTextColor="white"
-                />
-              </View>
+        <View style={styles.containerHomeCalculatorInput}>
+          <View style={styles.inputContainerTodo}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.labelText}>Kg</Text>
+              <TextInput
+                style={styles.textInputKgReps}
+                onChangeText={(text) => setKg(text)}
+                value={kg}
+                placeholder=""
+                keyboardType="numeric"
+                placeholderTextColor="white"
+                maxLength={3} 
+              />
             </View>
-
-            {oneRM && estimations.length > 0 && (
-              <View style={styles.gridContainer}>
-                {estimations.map((item) => (
-                  <View key={item.reps} style={styles.gridItem}>
-                    <Text style={styles.repsText}>{item.reps}RM</Text>
-                    <Text style={styles.weightText}>{item.weight}</Text>
-                    <Text style={styles.kgText}>kg</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            <View style={styles.inputWrapper}>
+              <Text style={styles.labelText}>Reps</Text>
+              <TextInput
+                style={styles.textInputKgReps}
+                onChangeText={(text) => setReps(text)}
+                value={reps}
+                placeholder=""
+                keyboardType="numeric"
+                placeholderTextColor="white"
+                maxLength={3} 
+              />
+            </View>
           </View>
+
+          {oneRM && estimations.length > 0 && (
+            <View style={styles.gridContainer}>
+              {estimations.map((item) => (
+                <View key={item.reps} style={styles.gridItem}>
+                  <Text style={styles.repsText}>{item.reps}RM</Text>
+                  <Text style={styles.weightText}>{item.weight}</Text>
+                  <Text style={styles.kgText}>kg</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-
+      </View>
     </KeyboardAvoidingView>
-
-
   );
 };
-
 export const SettingsScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
@@ -167,15 +164,17 @@ export const SettingsScreen = ({ navigation }) => {
 // Pantalla Chart
 export const ChartScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.containerChart}>
       <Text style={styles.title}>Chart Screen</Text>
     </View>
   );
 };
 
+
+
 export const PercentagejeScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.containerPercengaje}>
       <Text style={styles.title}>Porcentaje Screen</Text>
     </View>
   );
@@ -183,7 +182,7 @@ export const PercentagejeScreen = ({ navigation }) => {
 
 export const ProfileScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.containerProfile}>
       <Text style={styles.title}>Profile Screen</Text>
     </View>
   );
