@@ -15,50 +15,7 @@ import Porcentaje from './assets/Percentage.svg';
 import Profile from './assets/Profile.svg'; 
 import { styles } from "./Styles";
 
-export const Login = ({ navigation }) => {
-  return (
-    <View style={styles.container}>
-      <Image
-        style={styles.PRG}
-        source={require("./assets/Calavera_2_normal-removebg-preview.png")}
-      />
-      <Text style={styles.welcomeText}>Trackea tu Progreso.</Text>
-      <Text style={styles.SubTitulo}>
-        Y sincroniza con todos tus dispositivos.
-      </Text>
-      <TouchableOpacity
-        style={styles.iconButton}
-        onPress={() => navigation.navigate("Settings")}
-      >
-        <ConfigIcon width={24} height={24} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.profileChild, styles.profileLayout]}
-        onPress={() => navigation.navigate("Home")}
-      >
-        <View style={styles.buttonContent}>
-          <Image
-            source={require("./assets/Google.png")}
-            style={styles.iconGoogle}
-          />
-          <Text style={styles.continuarConGoogle}>Continuar con Google</Text>
-        </View>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.profileFb, styles.profileFb2]}
-        onPress={() => navigation.navigate("Home")}
-      >
-        <View style={styles.buttonContentFb}>
-          <Image
-            source={require("./assets/FB.png")}
-            style={styles.iconFacebook}
-          />
-          <Text style={styles.continuarConFb}>Continuar con Facebook</Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-};
+
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState("");
@@ -100,9 +57,14 @@ export const HomeScreen = ({ navigation }) => {
   return (
     <KeyboardAvoidingView style={styles.mainContainer} behavior="padding">
       <View style={styles.mainContainer}>
+      <TouchableOpacity 
+        style={styles.settingButton} 
+        onPress={() => navigation.navigate('Settings')}
+      >
+        <Text style={styles.buttonText}>Settings</Text>
+      </TouchableOpacity>
         <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
         <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
-
         <View style={styles.containerHomeCalculatorInput}>
           <View style={styles.inputContainerTodo}>
             <View style={styles.inputWrapper}>
@@ -151,12 +113,6 @@ export const SettingsScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.titleConfig}>Pantalla de Configuración</Text>
-      <TouchableOpacity
-        style={styles.ButtonBack}
-        onPress={() => navigation.navigate("Login")}
-      >
-        <ButtonBackIcon width={24} height={24} />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -187,3 +143,5 @@ export const ProfileScreen = ({ navigation }) => {
     </View>
   );
 };
+
+

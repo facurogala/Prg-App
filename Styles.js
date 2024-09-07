@@ -71,11 +71,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: width * 0.1,
     textAlign: 'center',
     marginBottom: height * 0.02,
-  },
-  ButtonBack: {
-    position: "absolute",
-    top: height * 0.05,
-    left: width * 0.05,
+
   },
   iconButton: {
     position: "absolute",
@@ -120,7 +116,6 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     resizeMode: "contain",
     flex: 1,
-   
     paddingHorizontal: 35,
   
     
@@ -254,4 +249,15 @@ containerPercengaje: {
       justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
       alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
     },
+    settingButton: {
+     position: "absolute",
+      backgroundColor: "white",
+      top: 10,        right: 25, 
+      width: 30, 
+      height: 30, 
+      justifyContent: "center",
+      alignItems: "center",
+       
+      },
+
 });

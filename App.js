@@ -1,75 +1,75 @@
+// App.js
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'react-native';
-import { ProfileScreen, HomeScreen, ChartScreen, PercentagejeScreen } from './Screens';
+import { HomeScreen, ProfileScreen, ChartScreen, PercentagejeScreen, SettingsScreen } from './Screens'; // Asegúrate de importar SettingsScreen
 import HomeIcon from './assets/Home.svg';
 import PercentageIcon from './assets/Percentage.svg';
 import ChartIcon from './assets/Chart.svg';
 import ProfileIcon from './assets/Profile.svg';
 
-// Creación del navegador de pestañas inferior
+// Creación del Tab y Stack Navigator
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-// Componente principal con la barra de navegación inferior
+// Configuración del Stack Navigator
+const MainStackNavigator = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="MainTabs" component={BottomTabNavigator} options={{ headerShown: false }} />
+    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: true, title: 'Configuración' }} />
+  </Stack.Navigator>
+);
+
+// Configuración del Tab Navigator
+const BottomTabNavigator = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarStyle: {
+        backgroundColor: '#0D1520',
+        borderTopWidth: 0,
+        borderTopColor: 'transparent',
+      },
+      tabBarHideOnKeyboard: true,
+      headerShown: false,
+      tabBarIcon: ({ color, size }) => {
+        let Icon;
+
+        switch (route.name) {
+          case 'HomeTab':
+            Icon = HomeIcon;
+            break;
+          case 'PorcentajeTab':
+            Icon = PercentageIcon;
+            break;
+          case 'ChartTab':
+            Icon = ChartIcon;
+            break;
+          case 'ProfileTab':
+            Icon = ProfileIcon;
+            break;
+          default:
+            Icon = HomeIcon;
+            break;
+        }
+
+        return <Icon width={size} height={size} style={{ color }} />;
+      },
+    })}
+  >
+    <Tab.Screen name="HomeTab" component={HomeScreen} options={{ title: '', headerShown: false }} />
+    <Tab.Screen name="PorcentajeTab" component={PercentagejeScreen} options={{ title: '', headerShown: false }} />
+    <Tab.Screen name="ChartTab" component={ChartScreen} options={{ title: '', headerShown: false }} />
+    <Tab.Screen name="ProfileTab" component={ProfileScreen} options={{ title: '', headerShown: false }} />
+  </Tab.Navigator>
+);
+
+// Componente principal de la App
 const App = () => (
   <NavigationContainer>
     <StatusBar barStyle="light-content" backgroundColor="#0D1520" />
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarStyle: {
-          backgroundColor: '#0D1520', // Color de fondo de la barra de navegación
-          borderTopWidth: 0, // Quita el borde superior
-          borderTopColor: 'transparent', // Asegúrate de que el color del borde sea transparente
-        },
-        tabBarHideOnKeyboard: true,
-        headerShown: false, // Oculta el encabezado para todas las pantallas
-        tabBarIcon: ({ color, size }) => {
-          let Icon;
-
-          switch (route.name) {
-            case 'HomeTab':
-              Icon = HomeIcon;
-              break;
-            case 'PorcentajeTab':
-              Icon = PercentageIcon;
-              break;
-            case 'ChartTab':
-              Icon = ChartIcon;
-              break;
-            case 'ProfileTab':
-              Icon = ProfileIcon;
-              break;
-            default:
-              Icon = HomeIcon;
-              break;
-          }
-
-          return <Icon width={size} height={size} style={{ color: color }} />;
-        },
-      })}
-    >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeScreen}
-        options={{ title: '', headerShown: false }} // Asegura que el encabezado esté oculto
-      />
-      <Tab.Screen
-        name="PorcentajeTab"
-        component={PercentagejeScreen}
-        options={{ title: '', headerShown: false }} // Asegura que el encabezado esté oculto
-      />
-      <Tab.Screen
-        name="ChartTab"
-        component={ChartScreen}
-        options={{ title: '', headerShown: false }} // Asegura que el encabezado esté oculto
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileScreen}
-        options={{ title: '', headerShown: false }} // Asegura que el encabezado esté oculto
-      />
-    </Tab.Navigator>
+    <MainStackNavigator />
   </NavigationContainer>
 );
 
