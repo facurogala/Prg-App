@@ -193,6 +193,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    compile project(":react-native-android-keyboard-adjust")
 }
 
 if (rnVersion < versionToNumber(0, 75, 0)) {

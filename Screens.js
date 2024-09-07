@@ -8,10 +8,10 @@ import {
   KeyboardAvoidingView,
   BackHandler,
 } from "react-native";
-import ConfigIcon from "./assets/tuerca.svg";
-import NavHome from './assets/navHome.svg';
+import ConfigIcon from "./assets/Setting.svg";
+import NavHome from './assets/Home.svg';
 import Chart from './assets/Chart.svg'; 
-import Porcentaje from './assets/porcentaje.svg'; 
+import Porcentaje from './assets/Percentage.svg'; 
 import Profile from './assets/Profile.svg'; 
 import { styles } from "./Styles";
 
@@ -144,20 +144,6 @@ export const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.containerNavBar}>
-  <TouchableOpacity style={styles.navHome} onPress={() => navigation.navigate("Home")}>
-    <NavHome width={34} height={34} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.Chart} onPress={() => navigation.navigate("Chart")}>
-    <Chart width={34} height={34} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.porcentaje} onPress={() => navigation.navigate("Porcentaje")}>
-    <Porcentaje width={34} height={34} />
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.Profile} onPress={() => navigation.navigate("Profile")}>
-    <Profile width={34} height={34} />
-  </TouchableOpacity>
-</View>
     </KeyboardAvoidingView>
 
 
@@ -187,7 +173,7 @@ export const ChartScreen = ({ navigation }) => {
   );
 };
 
-export const PorcentajeScreen = ({ navigation }) => {
+export const PercentagejeScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Porcentaje Screen</Text>
