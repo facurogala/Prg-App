@@ -152,7 +152,7 @@ export const styles = StyleSheet.create({
     fontSize: width * 0.05,
     fontWeight: "bold",
   },
-  weightText: {
+  weightTextInput: {
     fontSize: width * 0.080,
     color: 'white',
     fontWeight: 'bold',
@@ -256,7 +256,7 @@ containerPercentage: {
       justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
       alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
     },
-    containerChart: {
+ containerChart: {
       flex: 1, 
         backgroundColor: '#0D1520', // Cambia el color de fondo a consumo
         justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
@@ -279,6 +279,43 @@ containerPercentage: {
       alignItems: "center",
       right: 25, 
       },
+
+      containerPercentage: {
+        flex: 1,
+        backgroundColor: '#f5f5f5', // Color de fondo claro para una mejor visibilidad
+        padding: 20,
+      },
+      title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: 20,
+      },
+      itemContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: 'red',
+        padding: 15,
+        marginVertical: 5,
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      },
+      percentageText: {
+        fontSize: 18,
+        fontWeight: '500',
+        color: '#333333',
+      },
+      weightTextPercentage: {
+        fontSize: 18,
+        fontWeight: '500',
+        color: '#333333',
+      }, 
+      
    
 
 });

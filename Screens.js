@@ -7,24 +7,29 @@ import {
   TextInput,
   KeyboardAvoidingView,
   BackHandler,
+  FlatList,
 } from "react-native";
 import { styles } from "./Styles";
+import { useOneRM } from './OneRMContext';
+
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState("");
   const [reps, setReps] = useState("");
-  const [oneRM, setOneRM] = useState(null);
   const [estimations, setEstimations] = useState([]);
+  const { setOneRM } = useOneRM(); // Usa el contexto aquí
+  
 
   useEffect(() => {
     const backAction = () => {
-      navigation.navigate("Home");
-      return true;
+      navigation.goBack(); // Regresa a la pantalla anterior en la pila
+      return true; // Prevenir el comportamiento predeterminado
     };
 
     const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
     return () => backHandler.remove();
   }, [navigation]);
+
 
   useEffect(() => {
     const kgValue = parseFloat(kg);
@@ -35,30 +40,25 @@ export const HomeScreen = ({ navigation }) => {
       let repEstimations = [];
   
       if (repsValue === 1) {
-        // Si reps es 1, el 1RM es igual al peso ingresado
         calculatedOneRM = kgValue;
       } else {
-        // Calcula el 1RM usando la fórmula de Epley para más de 1 repetición
         calculatedOneRM = kgValue * (1 + 0.0333 * (repsValue - 1));
       }
   
-      // Agrega el 1RM al principio de las estimaciones
       repEstimations.push({ reps: "1", weight: calculatedOneRM.toFixed(0) });
   
-      // Calcula las estimaciones de RM de 2 a 20
       for (let i = 2; i <= 20; i++) {
         const estimatedKg = (calculatedOneRM / (1 + 0.0333 * (i - 1))).toFixed(0);
         repEstimations.push({ reps: i, weight: estimatedKg });
       }
   
-      setOneRM(calculatedOneRM.toFixed(2));
       setEstimations(repEstimations);
+      setOneRM(calculatedOneRM.toFixed(2)); // Actualiza el contexto aquí
     } else {
       setOneRM(null);
       setEstimations([]);
     }
-  }, [kg, reps]);
-  
+  }, [kg, reps, setOneRM]);
 
   return (
     <KeyboardAvoidingView style={styles.mainContainer} behavior="padding">
@@ -99,12 +99,12 @@ export const HomeScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {oneRM && estimations.length > 0 && (
+          {estimations.length > 0 && (
             <View style={styles.gridContainer}>
               {estimations.map((item) => (
                 <View key={item.reps} style={styles.gridItem}>
                   <Text style={styles.repsText}>{item.reps}RM</Text>
-                  <Text style={styles.weightText}>{item.weight}</Text>
+                  <Text style={styles.weightTextInput}>{item.weight}</Text>
                   <Text style={styles.kgText}>kg</Text>
                 </View>
               ))}
@@ -133,9 +133,25 @@ export const ChartScreen = ({ navigation }) => {
 };
 
 export const PercentageScreen = ({ navigation }) => {
+  const { percentages } = useOneRM(); // Obtener los porcentajes desde el contexto
+
+  const sortedPercentages = [...percentages].sort((a, b) => b.percentage - a.percentage);
+
+  console.log('Sorted Percentages:', sortedPercentages);
+
   return (
     <View style={styles.containerPercentage}>
-      <Text style={styles.title}>Porcentaje Screen</Text>
+      <Text style={styles.title}>Porcentaje de 1RM</Text>
+      <FlatList
+        data={sortedPercentages}
+        keyExtractor={(item) => item.percentage.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.itemContainer}>
+            <Text style={styles.percentageText}>{item.percentage}%</Text>
+            <Text style={styles.weightTextPercentage}>{item.weight} kg</Text>
+          </View>
+        )}
+      />
     </View>
   );
 };

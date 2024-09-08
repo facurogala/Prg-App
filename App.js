@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'react-native';
 import { HomeScreen, ProfileScreen, ChartScreen, PercentageScreen, SettingsScreen } from './Screens'; // Asegúrate de importar SettingsScreen
+import { OneRMProvider } from './OneRMContext'; // Importa el contexto
 import HomeIcon from './assets/Home.svg';
 import PercentageIcon from './assets/Percentage.svg';
 import ChartIcon from './assets/Chart.svg';
@@ -66,10 +67,12 @@ const BottomTabNavigator = () => (
 
 // Componente principal de la App
 const App = () => (
-  <NavigationContainer>
-    <StatusBar barStyle="light-content" backgroundColor="#0D1520" />
-    <MainStackNavigator />
-  </NavigationContainer>
+  <OneRMProvider>
+    <NavigationContainer>
+      <StatusBar barStyle="light-content" backgroundColor="#0D1520" />
+      <MainStackNavigator />
+    </NavigationContainer>
+  </OneRMProvider>
 );
 
 export default App;
