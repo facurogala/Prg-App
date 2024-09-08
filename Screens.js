@@ -8,14 +8,7 @@ import {
   KeyboardAvoidingView,
   BackHandler,
 } from "react-native";
-import ConfigIcon from "./assets/Setting.svg";
-import NavHome from './assets/Home.svg';
-import Chart from './assets/Chart.svg'; 
-import Porcentaje from './assets/Percentage.svg'; 
-import Profile from './assets/Profile.svg'; 
 import { styles } from "./Styles";
-
-
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState("");
@@ -36,33 +29,46 @@ export const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const kgValue = parseFloat(kg);
     const repsValue = parseFloat(reps);
-
+  
     if (!isNaN(kgValue) && !isNaN(repsValue) && repsValue > 0) {
-      const result = kgValue * (1 + 0.0333 * repsValue);
-      setOneRM(result.toFixed(2));
-
-      const repEstimations = [];
+      let calculatedOneRM;
+      let repEstimations = [];
+  
+      if (repsValue === 1) {
+        // Si reps es 1, el 1RM es igual al peso ingresado
+        calculatedOneRM = kgValue;
+      } else {
+        // Calcula el 1RM usando la fórmula de Epley para más de 1 repetición
+        calculatedOneRM = kgValue * (1 + 0.0333 * (repsValue - 1));
+      }
+  
+      // Agrega el 1RM al principio de las estimaciones
+      repEstimations.push({ reps: "1", weight: calculatedOneRM.toFixed(0) });
+  
+      // Calcula las estimaciones de RM de 2 a 20
       for (let i = 2; i <= 20; i++) {
-        const estimatedKg = (result / (1 + 0.0333 * i)).toFixed(0);
+        const estimatedKg = (calculatedOneRM / (1 + 0.0333 * (i - 1))).toFixed(0);
         repEstimations.push({ reps: i, weight: estimatedKg });
       }
-
-      setEstimations([{ reps: "1", weight: result.toFixed(0) }, ...repEstimations]);
+  
+      setOneRM(calculatedOneRM.toFixed(2));
+      setEstimations(repEstimations);
     } else {
       setOneRM(null);
       setEstimations([]);
     }
   }, [kg, reps]);
+  
 
   return (
     <KeyboardAvoidingView style={styles.mainContainer} behavior="padding">
       <View style={styles.mainContainer}>
-      <TouchableOpacity 
-        style={styles.settingButton} 
-        onPress={() => navigation.navigate('Settings')}
-      >
-        <Text style={styles.buttonText}>Settings</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.settingButton} 
+          onPress={() => navigation.navigate('Settings')}
+        >
+          <Text style={styles.buttonText}>Settings</Text>
+        </TouchableOpacity>
         <Image style={styles.PrgVerde} source={require("./assets/PRG.png")} />
         <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
         <View style={styles.containerHomeCalculatorInput}>
@@ -109,6 +115,7 @@ export const HomeScreen = ({ navigation }) => {
     </KeyboardAvoidingView>
   );
 };
+
 export const SettingsScreen = ({ navigation }) => {
   return (
     <View style={styles.containerSetting}>
@@ -117,7 +124,6 @@ export const SettingsScreen = ({ navigation }) => {
   );
 };
 
-// Pantalla Chart
 export const ChartScreen = ({ navigation }) => {
   return (
     <View style={styles.containerChart}>
@@ -125,8 +131,6 @@ export const ChartScreen = ({ navigation }) => {
     </View>
   );
 };
-
-
 
 export const PercentageScreen = ({ navigation }) => {
   return (
@@ -143,5 +147,3 @@ export const ProfileScreen = ({ navigation }) => {
     </View>
   );
 };
-
-
