@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { SettingsScreen } from './Screens';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -269,14 +269,15 @@ containerPercentage: {
           justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
           alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
         },
-    settingButton: {
+   settingButton: {
      position: "absolute",
       backgroundColor: "white",
-      top: 10,        right: 25, 
+      top: 10,        
       width: 30, 
       height: 30, 
       justifyContent: "center",
       alignItems: "center",
+      right: 25, 
       },
    
 

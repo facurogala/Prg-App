@@ -111,7 +111,7 @@ export const HomeScreen = ({ navigation }) => {
 };
 export const SettingsScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.containerSetting}>
       <Text style={styles.titleConfig}>Pantalla de Configuración</Text>
     </View>
   );
