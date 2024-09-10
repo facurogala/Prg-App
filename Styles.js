@@ -51,21 +51,15 @@ export const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: height * 0.03,
   },
-  mainContainer: {
-    flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    backgroundColor: "#0D1520",
 
-  },
   PrgVerde: {
     position: 'absolute',
     top: 15,
+    left: width * 0.3, // Ajusta para centrar el elemento
     width: width * 0.4,
     height: height * 0.1,
     resizeMode: 'contain',
     zIndex: 1,
-    marginBottom: height * 0.013,
   },
      Calcula1Rmhead: {
     fontSize: width * 0.05,
@@ -244,12 +238,7 @@ containerChart: {
     alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
 },
 
-containerPercentage: {
-  flex: 1, // Asegúrate de que el contenedor ocupe toda la pantalla
-    backgroundColor: '#0D1520', // Cambia el color de fondo a verde
-    justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
-    alignItems: 'center', // Opcional, para centrar el contenido horizontalmente
-  },
+
   containerProfile: {
     flex: 1, 
       backgroundColor: '#0D1520', // Cambia el color de fondo a verde
@@ -280,42 +269,102 @@ containerPercentage: {
       right: 25, 
       },
 
-      containerPercentage: {
-        flex: 1,
-        backgroundColor: '#f5f5f5', // Color de fondo claro para una mejor visibilidad
-        padding: 20,
-      },
-      title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-      },
-      itemContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: 'red',
-        padding: 15,
-        marginVertical: 5,
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-      },
-      percentageText: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#333333',
-      },
-      weightTextPercentage: {
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#333333',
-      }, 
-      
-   
+      percentagesContainer: {
+        marginVertical: 20,
+        
 
+      },
+      column: {
+        flex: 1,
+        alignItems: 'flex-start',
+        paddingHorizontal: 1,
+        
+      },   
+      column2: {
+        flex: 1,
+        alignItems: 'flex-start',
+        paddingHorizontal: 10,    
+      },
+      percentageText2: {
+        color: '#bbb',
+        fontSize: 16,
+        paddingLeft: 1,
+       
+        
+      },
+      weightText: {
+        color: '#fff',
+        fontSize: 16,
+        flex: 1,
+        textAlign: 'right',
+      },
+      
+      scrollViewContent: {
+        flexGrow: 1, // Permite que el contenido se expanda para llenar el espacio
+        justifyContent: 'flex-start', // Alinea el contenido al inicio
+        alignItems: 'center', // Centra los elementos horizontalmente
+        padding: 2, // Ajusta el espacio interno alrededor del contenido
+        backgroundColor: 'transparent', // Cambia el fondo a transparente para evitar que cubra otros elementos
+        paddingHorizontal: 15,
+      },
+
+
+    scrollContentContainer: {
+      paddingVertical: 20, // Añadir espacio vertical si es necesario
+      
+    },
+    mainContentContainer: {
+      paddingHorizontal: 20,
+      marginBottom: 20, // Para asegurar que haya espacio entre el contenido principal y los textos "Hello"
+   
+    },
+
+    mainContainer: {
+      flex: 1,
+      backgroundColor: '#0D1520',
+    },
+  
+    percentagesContainer: {
+      marginTop: 500,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      padding: 10,
+      backgroundColor: "#212836",
+      borderRadius: 10,
+      marginHorizontal: height * 0.02,
+
+    },
+    column: {
+      flex: 1,
+      paddingHorizontal:1 ,
+    },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginVertical: 5,
+      marginHorizontal: 20,
+    },
+    percentageText: {
+      fontSize: 16,
+      color: "white",
+      paddingLeft: 5,
+    },
+    weightText: {
+      fontSize: 16,
+      color: "white",
+      paddingLeft: 5,
+    },
+    // Eliminar fondo negro de la caja
+    percentagesBox: {
+      flex: 1,
+      flexDirection: 'row', // Alinea las columnas horizontalmente
+      justifyContent: 'space-between', // Asegura que las columnas se distribuyan uniformemente
+      paddingHorizontal: 100,
+      marginTop: 10,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20, // Ajusta según sea necesario
+      
+    },
+    
 });
