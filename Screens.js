@@ -10,7 +10,7 @@ import {
   ScrollView
 } from 'react-native'
 import { styles } from './Styles'
-import { useOneRM } from './OneRMContext'
+import DateTimePicker from '@react-native-community/datetimepicker'
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState('')
@@ -18,7 +18,7 @@ export const HomeScreen = ({ navigation }) => {
   const [estimations, setEstimations] = useState(
     Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })) // Inicializa con 20 boxes vacíos
   )
-  const { setOneRM } = useOneRM() // Usa el contexto aquí
+  const [percentages, setPercentages] = useState([]) // Estado local para almacenar porcentajes
 
   useEffect(() => {
     const backAction = () => {
@@ -52,22 +52,22 @@ export const HomeScreen = ({ navigation }) => {
       }
 
       setEstimations(repEstimations)
-      setOneRM(calculatedOneRM.toFixed(2)) // Actualiza el contexto aquí
+
+      // Calcular los porcentajes basados en el valor de 1RM
+      const newPercentages = Array.from({ length: 12 }, (_, index) => {
+        const percentage = 125 - index * 5 // Calcula el porcentaje desde 125% hasta 30%
+        const weight = (calculatedOneRM * (percentage / 100)).toFixed(0) // Calcula el peso basado en el 1RM
+        return { percentage, weight }
+      })
+
+      setPercentages(newPercentages) // Actualiza el estado de porcentajes
     } else {
-      setOneRM(null)
       setEstimations(
         Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })) // Reinicia a boxes vacíos
       )
+      setPercentages([]) // Reinicia los porcentajes
     }
-  }, [kg, reps, setOneRM])
-
-  // Calcular los porcentajes basados en el valor de 1RM
-  const oneRMValue = parseFloat(kg) ? parseFloat(kg) * (1 + 0.0333 * (parseFloat(reps) - 1)) : 0
-  const percentages = Array.from({ length: 12 }, (_, index) => {
-    const percentage = 125 - index * 5 // Calcula el porcentaje desde 125% hasta 30%
-    const weight = (oneRMValue * (percentage / 100)).toFixed(0) // Calcula el peso basado en el 1RM
-    return { percentage, weight }
-  })
+  }, [kg, reps])
 
   // Dividir la lista en dos columnas
   const firstColumn = percentages.slice(0, Math.ceil(percentages.length / 2))
@@ -114,7 +114,6 @@ export const HomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.gridContainer}>
-
               {estimations.map((item) => (
                 <View key={item.reps} style={styles.gridItem}>
                   <Text style={styles.repsText}>{item.reps}RM</Text>
@@ -163,7 +162,7 @@ export const HomeScreen = ({ navigation }) => {
   )
 }
 
-export const SettingsScreen = ({ navigation }) => {
+export const SettingsScreen = () => {
   return (
     <View style={styles.containerSetting}>
       <Text style={styles.titleConfig}>Pantalla de Configuración</Text>
@@ -171,7 +170,7 @@ export const SettingsScreen = ({ navigation }) => {
   )
 }
 
-export const ChartScreen = ({ navigation }) => {
+export const ChartScreen = () => {
   return (
     <View style={styles.containerChart}>
       <Text style={styles.title}>Chart Screen</Text>
@@ -187,7 +186,7 @@ export const PercentageScreen = () => {
   )
 }
 
-export const ProfileScreen = ({ navigation }) => {
+export const ProfileScreen = () => {
   return (
     <View style={styles.containerProfile}>
       <Text style={styles.title}>Profile Screen</Text>
