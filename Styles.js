@@ -372,5 +372,8 @@ export const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
     left: (width * 0.6) / 2.5
+  },
+  containerPercentages: {
+
   }
 })

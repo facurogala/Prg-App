@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import {
   Text,
   View,
@@ -11,14 +11,19 @@ import {
 } from 'react-native'
 import { styles } from './Styles'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import { GlobalContext } from './GlobalContext'
+
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState('')
   const [reps, setReps] = useState('')
+  const [date, setDate] = useState(new Date()) // Agregar estado para la fecha
+  const [showDatePicker, setShowDatePicker] = useState(false) // Mostrar el selector de fecha
   const [estimations, setEstimations] = useState(
     Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })) // Inicializa con 20 boxes vacíos
   )
   const [percentages, setPercentages] = useState([]) // Estado local para almacenar porcentajes
+  const { add1RM } = useContext(GlobalContext);
 
   useEffect(() => {
     const backAction = () => {
@@ -72,6 +77,18 @@ export const HomeScreen = ({ navigation }) => {
   // Dividir la lista en dos columnas
   const firstColumn = percentages.slice(0, Math.ceil(percentages.length / 2))
   const secondColumn = percentages.slice(Math.ceil(percentages.length / 2))
+
+  const handleSave = () => {
+    const oneRM = estimations[0]?.weight // Asumiendo que el primer elemento es el 1RM calculado
+    const dataToSave = { oneRM, kg, reps, date: date.toLocaleDateString() } // Usar la fecha seleccionada
+
+    add1RM(dataToSave) // Guarda los datos
+    navigation.navigate('PercentageTab');
+  }
+
+  const showDatepicker = () => {
+    setShowDatePicker(true) // Mostrar el selector de fecha
+  }
 
   return (
     <KeyboardAvoidingView style={styles.mainContainer} behavior='padding'>
@@ -152,9 +169,30 @@ export const HomeScreen = ({ navigation }) => {
                       <Text style={styles.weightTextRight}>{item.weight} kg</Text>
                     </View>
                   ))}
+                  <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                    <Text style={styles.buttonText}>Guardar 1RM</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
+
+            {/* Botón para mostrar el selector de fecha */}
+            <TouchableOpacity onPress={showDatepicker}>
+              <Text style={styles.buttonText}>Seleccionar Fecha</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode='date'
+                display='default'
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false)
+                  if (selectedDate) {
+                    setDate(selectedDate)
+                  }
+                }}
+              />
+            )}
           </View>
         </View>
       </ScrollView>
@@ -179,10 +217,25 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = () => {
+  const { saved1RMs } = useContext(GlobalContext) // Obtén los datos guardados
+
   return (
-    <View>
-      <Text>Porcentaje</Text>
-    </View>
+    <ScrollView style={styles.containerPercentage}>
+      {saved1RMs.length > 0
+        ? (
+            saved1RMs.map((item, index) => (
+              <View key={index} style={styles.saved1RMBox}>
+                <Text style={styles.savedText}>1RM: {item.oneRM} kg</Text>
+                <Text style={styles.savedText}>Peso: {item.kg} kg</Text>
+                <Text style={styles.savedText}>Repeticiones: {item.reps}</Text>
+                <Text style={styles.savedText}>Fecha: {item.date}</Text>
+              </View>
+            ))
+          )
+        : (
+          <Text style={styles.noDataText}>No hay datos guardados.</Text>
+          )}
+    </ScrollView>
   )
 }
 
