@@ -1,17 +1,23 @@
 // GlobalContext.js
 import React, { createContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Crea el contexto
 export const GlobalContext = createContext();
 
-// Proveedor del contexto
 export const GlobalProvider = ({ children }) => {
   const [saved1RMs, setSaved1RMs] = useState([]);
 
-  // Función para agregar un nuevo 1RM
-  const add1RM = (nuevoLevantamiento) => {
-    const nuevosLevantamientos = [...saved1RMs, nuevoLevantamiento];
-    setSaved1RMs(nuevosLevantamientos);
+  const add1RM = async (newLift) => {
+    try {
+      // Agregar el nuevo levantamiento al estado actual
+      const updatedLifts = [...saved1RMs, newLift];
+      // Guardar los levantamientos actualizados en AsyncStorage
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedLifts));
+      // Actualizar el estado con los nuevos levantamientos
+      setSaved1RMs(updatedLifts);
+    } catch (error) {
+      console.error('Error al guardar el levantamiento:', error);
+    }
   };
 
   return (

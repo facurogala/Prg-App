@@ -7,15 +7,12 @@ import {
   TextInput,
   KeyboardAvoidingView,
   BackHandler,
-  ScrollView
-} from 'react-native'
+  ScrollView} from 'react-native'
 import { styles } from './Styles'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlobalContainer from './GlobalContainer'
-import { Swipeable } from 'react-native-reanimated'; // Importa Swipeable desde Reanimated
-
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -97,7 +94,7 @@ export const HomeScreen = ({ navigation }) => {
             style={styles.settingButton}
             onPress={() => navigation.navigate('Settings')}
           >
-            <Text style={styles.buttonText}>Settings</Text>
+            <Text style={styles.buttonText1RM}>Settings</Text>
           </TouchableOpacity>
           <Image style={styles.PrgVerde} source={require('./assets/PRG.png')} />
           <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
@@ -171,7 +168,7 @@ export const HomeScreen = ({ navigation }) => {
             </View>
 
             <TouchableOpacity onPress={showDatepicker}>
-              <Text style={styles.buttonText}>Seleccionar Fecha</Text>
+              <Text style={styles.buttonText1RM}>Seleccionar Fecha</Text>
             </TouchableOpacity>
 
             {showDatePicker && (
@@ -179,7 +176,7 @@ export const HomeScreen = ({ navigation }) => {
                 value={date}
                 mode='date'
                 display='default'
-                onChange={(event, selectedDate) => {
+                onChange={(_event, selectedDate) => {
                   setShowDatePicker(false)
                   if (selectedDate) {
                     setDate(selectedDate)
@@ -211,70 +208,56 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = () => {
-  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
+  // Asegúrate de obtener ambos valores del contexto
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
 
   useEffect(() => {
     const cargarLevantamientos = async () => {
       try {
-        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs');
-        setSaved1RMs(levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []);
+        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
+        setSaved1RMs(levantamientosGuardados ? JSON.parse(levantamientosGuardados) : [])
       } catch (error) {
-        console.error('Error al cargar levantamientos', error);
+        console.error('Error al cargar levantamientos', error)
       }
-    };
-    cargarLevantamientos();
-  }, []);
-
-  const guardarLevantamiento = async (nuevoLevantamiento) => {
-    try {
-      const nuevosLevantamientos = [...saved1RMs, nuevoLevantamiento];
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
-      setSaved1RMs(nuevosLevantamientos);
-    } catch (error) {
-      console.error('Error al guardar el levantamiento', error);
     }
-  };
+    cargarLevantamientos()
+  }, [])
 
   const eliminarLevantamiento = async (index) => {
     try {
-      const nuevosLevantamientos = saved1RMs.filter((_, i) => i !== index);
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
-      setSaved1RMs(nuevosLevantamientos);
+      const nuevosLevantamientos = saved1RMs.filter((_, i) => i !== index)
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos))
+      setSaved1RMs(nuevosLevantamientos)
     } catch (error) {
-      console.error('Error al eliminar el levantamiento', error);
+      console.error('Error al eliminar el levantamiento', error)
     }
-  };
-
-  const renderRightActions = (index) => (
-    <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarLevantamiento(index)}>
-      <Text style={styles.deleteButtonText}>Eliminar</Text>
-    </TouchableOpacity>
-  );
+  }
 
   return (
     <GlobalContainer>
       <ScrollView style={styles.containerPercentage}>
-        {saved1RMs.length > 0 ? (
-          saved1RMs.map((item, index) => (
-            <Swipeable
-              key={index}
-              renderRightActions={() => renderRightActions(index)}
-            >
-              <View style={styles.saved1RMBox}>
-                <Text style={styles.savedText}>1RM: {item.oneRM} kg</Text>
-                <Text style={styles.savedText}>Peso: {item.kg} kg</Text>
-                <Text style={styles.savedText}>Repeticiones: {item.reps}</Text>
-                <Text style={styles.savedText}>Fecha: {item.date}</Text>
-              </View>
-            </Swipeable>
-          ))
-        ) : (
-          <Text style={styles.noDataText}>No hay datos guardados.</Text>
-        )}
+        {saved1RMs.length > 0
+          ? (
+              saved1RMs.map((item, index) => (
+                <View key={index} style={styles.saved1RMBox}>
+                  <Text style={styles.savedText}>1RM: {item.oneRM} kg</Text>
+                  <Text style={styles.savedText}>Peso: {item.kg} kg</Text>
+                  <Text style={styles.savedText}>Repeticiones: {item.reps}</Text>
+                  <Text style={styles.savedText}>Fecha: {item.date}</Text>
+                  <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
+                    <Text style={{ color: 'red', marginTop: 10 }}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )
+          : (
+            <Text style={styles.noDataText}>No hay datos guardados.</Text>
+            )}
       </ScrollView>
     </GlobalContainer>
-  );
-};
+  )
+}
+
 export const ProfileScreen = () => {
   return (
     <View style={styles.containerProfile}>

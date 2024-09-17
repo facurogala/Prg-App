@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native'
-import { PercentageScreen } from './Screens'
+
 
 const { width, height } = Dimensions.get('window')
 
