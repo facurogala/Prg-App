@@ -7,7 +7,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   BackHandler,
-  ScrollView} from 'react-native'
+  ScrollView
+} from 'react-native'
 import { styles } from './Styles'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { GlobalContext } from './GlobalContext'
@@ -75,10 +76,12 @@ export const HomeScreen = ({ navigation }) => {
   const handleSave = () => {
     if (estimations[0]?.weight) {
       const oneRM = estimations[0].weight
-      const dataToSave = { oneRM, kg, reps, date: date.toLocaleDateString() }
-
-      add1RM(dataToSave)
-      navigation.navigate('PercentageTab')
+      navigation.navigate('SaveDetails', {
+        kg,
+        reps,
+        oneRM,
+        date: date.toISOString() // Pasa la fecha correctamente
+      })
     }
   }
 
