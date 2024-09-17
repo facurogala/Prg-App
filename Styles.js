@@ -1,4 +1,5 @@
 import { StyleSheet, Dimensions } from 'react-native'
+import { PercentageScreen } from './Screens'
 
 const { width, height } = Dimensions.get('window')
 
@@ -94,7 +95,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: width * 0.01,
     height: height * 0.08,
     backgroundColor: '#212836',
-    borderRadius: 10,
+    borderRadius: 5,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 15
@@ -131,7 +132,7 @@ export const styles = StyleSheet.create({
     height: height * 0.11, // Ajusta el tamaño relativo al alto de la pantalla
     marginVertical: height * 0.01,
     backgroundColor: '#212836',
-    borderRadius: 8,
+    borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 1
@@ -160,7 +161,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#e70000',
     width: width * 0.8,
     height: height * 0.05,
-    borderRadius: 10,
+    borderRadius: 5,
     marginTop: height * 0.07
   },
   continuarConGoogle: {
@@ -186,7 +187,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#3D7FFF',
     width: width * 0.8,
     height: height * 0.05,
-    borderRadius: 10,
+    borderRadius: 5,
     marginTop: height * 0.1
   },
   continuarConFb: {
@@ -218,11 +219,17 @@ export const styles = StyleSheet.create({
   navHome: {
     marginHorizontal: 20 // Ajusta el margen según tus necesidades
   },
-  Chart: {
-    marginHorizontal: 20
+  containerPercentage: {
+    flex: 1,
+    backgroundColor: '#0D1520'
   },
-  porcentaje: {
-    marginHorizontal: 20
+  saved1RMBox: {
+    flex: 1,
+    height: height * 0.11,
+    backgroundColor: '#212836',
+    borderRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   Profile: {
     marginHorizontal: 20
@@ -328,7 +335,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center', // Centra los elementos verticalmente
     padding: 10,
     backgroundColor: '#212836',
-    borderRadius: 10,
+    borderRadius: 5,
     marginHorizontal: height * 0.02,
     marginTop: height * 0.53,
     marginBottom: height * 0.10,
@@ -373,7 +380,19 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     left: (width * 0.6) / 2.5
   },
-  containerPercentages: {
+  buttonText1RM: {
+    color: '#D9E92C',
+    fontWeight: 'bold',
+    fontSize: 16
+  },
 
+  saveButton1RM: {
+    backgroundColor: '#212836',
+    height: 40, // Define una altura específica para el botón
+    paddingHorizontal: width * 0.1,
+    borderRadius: 5,
+    justifyContent: 'center', // Centra el contenido verticalmente
+    alignItems: 'center',
+    marginTop: height * 0.01
   }
 })

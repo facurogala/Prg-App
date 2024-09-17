@@ -9,12 +9,13 @@ export const GlobalProvider = ({ children }) => {
   const [saved1RMs, setSaved1RMs] = useState([]);
 
   // Función para agregar un nuevo 1RM
-  const add1RM = (data) => {
-    setSaved1RMs((prev1RMs) => [...prev1RMs, data]);
+  const add1RM = (nuevoLevantamiento) => {
+    const nuevosLevantamientos = [...saved1RMs, nuevoLevantamiento];
+    setSaved1RMs(nuevosLevantamientos);
   };
 
   return (
-    <GlobalContext.Provider value={{ saved1RMs, add1RM }}>
+    <GlobalContext.Provider value={{ saved1RMs, setSaved1RMs, add1RM }}>
       {children}
     </GlobalContext.Provider>
   );

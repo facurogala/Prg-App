@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useMemo } from 'react'
 import {
   Text,
   View,
@@ -12,23 +12,31 @@ import {
 import { styles } from './Styles'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { GlobalContext } from './GlobalContext'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import GlobalContainer from './GlobalContainer'
+import { Swipeable } from 'react-native-reanimated'; // Importa Swipeable desde Reanimated
 
+
+const isValidInput = (kg, reps) => {
+  return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
+}
 
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState('')
   const [reps, setReps] = useState('')
-  const [date, setDate] = useState(new Date()) // Agregar estado para la fecha
-  const [showDatePicker, setShowDatePicker] = useState(false) // Mostrar el selector de fecha
+  const [date, setDate] = useState(new Date())
+  const [showDatePicker, setShowDatePicker] = useState(false)
   const [estimations, setEstimations] = useState(
-    Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })) // Inicializa con 20 boxes vacíos
+    Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' }))
   )
-  const [percentages, setPercentages] = useState([]) // Estado local para almacenar porcentajes
-  const { add1RM } = useContext(GlobalContext);
+  const [percentages, setPercentages] = useState([])
+
+  const { add1RM } = useContext(GlobalContext)
 
   useEffect(() => {
     const backAction = () => {
-      navigation.goBack() // Regresa a la pantalla anterior en la pila
-      return true // Prevenir el comportamiento predeterminado
+      navigation.goBack()
+      return true
     }
 
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction)
@@ -36,20 +44,11 @@ export const HomeScreen = ({ navigation }) => {
   }, [navigation])
 
   useEffect(() => {
-    const kgValue = parseFloat(kg)
-    const repsValue = parseFloat(reps)
-
-    if (!isNaN(kgValue) && !isNaN(repsValue) && repsValue > 0) {
-      let calculatedOneRM
-      const repEstimations = []
-
-      if (repsValue === 1) {
-        calculatedOneRM = kgValue
-      } else {
-        calculatedOneRM = kgValue * (1 + 0.0333 * (repsValue - 1))
-      }
-
-      repEstimations.push({ reps: '1', weight: calculatedOneRM.toFixed(0) })
+    if (isValidInput(kg, reps)) {
+      const kgValue = parseFloat(kg)
+      const repsValue = parseFloat(reps)
+      const calculatedOneRM = repsValue === 1 ? kgValue : kgValue * (1 + 0.0333 * (repsValue - 1))
+      const repEstimations = [{ reps: '1', weight: calculatedOneRM.toFixed(0) }]
 
       for (let i = 2; i <= 20; i++) {
         const estimatedKg = (calculatedOneRM / (1 + 0.0333 * (i - 1))).toFixed(0)
@@ -58,36 +57,36 @@ export const HomeScreen = ({ navigation }) => {
 
       setEstimations(repEstimations)
 
-      // Calcular los porcentajes basados en el valor de 1RM
       const newPercentages = Array.from({ length: 12 }, (_, index) => {
-        const percentage = 125 - index * 5 // Calcula el porcentaje desde 125% hasta 30%
-        const weight = (calculatedOneRM * (percentage / 100)).toFixed(0) // Calcula el peso basado en el 1RM
+        const percentage = 125 - index * 5
+        const weight = (calculatedOneRM * (percentage / 100)).toFixed(0)
         return { percentage, weight }
       })
 
-      setPercentages(newPercentages) // Actualiza el estado de porcentajes
+      setPercentages(newPercentages)
     } else {
       setEstimations(
-        Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })) // Reinicia a boxes vacíos
+        Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' }))
       )
-      setPercentages([]) // Reinicia los porcentajes
+      setPercentages([])
     }
   }, [kg, reps])
 
-  // Dividir la lista en dos columnas
-  const firstColumn = percentages.slice(0, Math.ceil(percentages.length / 2))
-  const secondColumn = percentages.slice(Math.ceil(percentages.length / 2))
+  const firstColumn = useMemo(() => percentages.slice(0, Math.ceil(percentages.length / 2)), [percentages])
+  const secondColumn = useMemo(() => percentages.slice(Math.ceil(percentages.length / 2)), [percentages])
 
   const handleSave = () => {
-    const oneRM = estimations[0]?.weight // Asumiendo que el primer elemento es el 1RM calculado
-    const dataToSave = { oneRM, kg, reps, date: date.toLocaleDateString() } // Usar la fecha seleccionada
+    if (estimations[0]?.weight) {
+      const oneRM = estimations[0].weight
+      const dataToSave = { oneRM, kg, reps, date: date.toLocaleDateString() }
 
-    add1RM(dataToSave) // Guarda los datos
-    navigation.navigate('PercentageTab');
+      add1RM(dataToSave)
+      navigation.navigate('PercentageTab')
+    }
   }
 
   const showDatepicker = () => {
-    setShowDatePicker(true) // Mostrar el selector de fecha
+    setShowDatePicker(true)
   }
 
   return (
@@ -102,6 +101,7 @@ export const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Image style={styles.PrgVerde} source={require('./assets/PRG.png')} />
           <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
+
           <View style={styles.containerHomeCalculatorInput}>
             <View style={styles.inputContainerTodo}>
               <View style={styles.inputWrapper}>
@@ -110,7 +110,6 @@ export const HomeScreen = ({ navigation }) => {
                   style={styles.textInputKgReps}
                   onChangeText={(text) => setKg(text)}
                   value={kg}
-                  placeholder=''
                   keyboardType='numeric'
                   placeholderTextColor='white'
                   maxLength={3}
@@ -122,13 +121,17 @@ export const HomeScreen = ({ navigation }) => {
                   style={styles.textInputKgReps}
                   onChangeText={(text) => setReps(text)}
                   value={reps}
-                  placeholder=''
                   keyboardType='numeric'
                   placeholderTextColor='white'
                   maxLength={3}
                 />
               </View>
             </View>
+
+            {/* Botón Guardar 1RM, movido entre los inputs y las estimaciones */}
+            <TouchableOpacity style={styles.saveButton1RM} onPress={handleSave}>
+              <Text style={styles.buttonText1RM}>Guardar 1RM</Text>
+            </TouchableOpacity>
 
             <View style={styles.gridContainer}>
               {estimations.map((item) => (
@@ -141,14 +144,10 @@ export const HomeScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.percentagesContainer}>
-              {/* Título */}
               <View>
                 <Text style={styles.textPorcent}>Porcentajes</Text>
               </View>
-
-              {/* Contenedor de columnas */}
               <View style={styles.percentagesBox}>
-                {/* Columna Izquierda */}
                 <View style={styles.column}>
                   {firstColumn.map((item) => (
                     <View key={item.percentage} style={styles.row}>
@@ -158,10 +157,8 @@ export const HomeScreen = ({ navigation }) => {
                   ))}
                 </View>
 
-                {/* Separador */}
                 <View style={styles.separator} />
 
-                {/* Columna Derecha */}
                 <View style={styles.column2}>
                   {secondColumn.map((item) => (
                     <View key={item.percentage} style={styles.row}>
@@ -169,17 +166,14 @@ export const HomeScreen = ({ navigation }) => {
                       <Text style={styles.weightTextRight}>{item.weight} kg</Text>
                     </View>
                   ))}
-                  <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                    <Text style={styles.buttonText}>Guardar 1RM</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             </View>
 
-            {/* Botón para mostrar el selector de fecha */}
             <TouchableOpacity onPress={showDatepicker}>
               <Text style={styles.buttonText}>Seleccionar Fecha</Text>
             </TouchableOpacity>
+
             {showDatePicker && (
               <DateTimePicker
                 value={date}
@@ -217,28 +211,70 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = () => {
-  const { saved1RMs } = useContext(GlobalContext) // Obtén los datos guardados
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
+
+  useEffect(() => {
+    const cargarLevantamientos = async () => {
+      try {
+        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs');
+        setSaved1RMs(levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []);
+      } catch (error) {
+        console.error('Error al cargar levantamientos', error);
+      }
+    };
+    cargarLevantamientos();
+  }, []);
+
+  const guardarLevantamiento = async (nuevoLevantamiento) => {
+    try {
+      const nuevosLevantamientos = [...saved1RMs, nuevoLevantamiento];
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
+      setSaved1RMs(nuevosLevantamientos);
+    } catch (error) {
+      console.error('Error al guardar el levantamiento', error);
+    }
+  };
+
+  const eliminarLevantamiento = async (index) => {
+    try {
+      const nuevosLevantamientos = saved1RMs.filter((_, i) => i !== index);
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
+      setSaved1RMs(nuevosLevantamientos);
+    } catch (error) {
+      console.error('Error al eliminar el levantamiento', error);
+    }
+  };
+
+  const renderRightActions = (index) => (
+    <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarLevantamiento(index)}>
+      <Text style={styles.deleteButtonText}>Eliminar</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <ScrollView style={styles.containerPercentage}>
-      {saved1RMs.length > 0
-        ? (
-            saved1RMs.map((item, index) => (
-              <View key={index} style={styles.saved1RMBox}>
+    <GlobalContainer>
+      <ScrollView style={styles.containerPercentage}>
+        {saved1RMs.length > 0 ? (
+          saved1RMs.map((item, index) => (
+            <Swipeable
+              key={index}
+              renderRightActions={() => renderRightActions(index)}
+            >
+              <View style={styles.saved1RMBox}>
                 <Text style={styles.savedText}>1RM: {item.oneRM} kg</Text>
                 <Text style={styles.savedText}>Peso: {item.kg} kg</Text>
                 <Text style={styles.savedText}>Repeticiones: {item.reps}</Text>
                 <Text style={styles.savedText}>Fecha: {item.date}</Text>
               </View>
-            ))
-          )
-        : (
+            </Swipeable>
+          ))
+        ) : (
           <Text style={styles.noDataText}>No hay datos guardados.</Text>
-          )}
-    </ScrollView>
-  )
-}
-
+        )}
+      </ScrollView>
+    </GlobalContainer>
+  );
+};
 export const ProfileScreen = () => {
   return (
     <View style={styles.containerProfile}>
