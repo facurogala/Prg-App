@@ -1,3 +1,4 @@
+// HomeScreen.js
 import React, { useState, useEffect, useContext, useMemo } from 'react'
 import {
   Text,
@@ -63,13 +64,12 @@ export const HomeScreen = ({ navigation }) => {
 
       setPercentages(newPercentages)
     } else {
-      setEstimations(
-        Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' }))
-      )
+      setEstimations(Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' })))
       setPercentages([])
     }
   }, [kg, reps])
 
+  // División de porcentajes en dos columnas en orden descendente
   const firstColumn = useMemo(() => percentages.slice(0, Math.ceil(percentages.length / 2)), [percentages])
   const secondColumn = useMemo(() => percentages.slice(Math.ceil(percentages.length / 2)), [percentages])
 
@@ -128,7 +128,6 @@ export const HomeScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Botón Guardar 1RM, movido entre los inputs y las estimaciones */}
             <TouchableOpacity style={styles.saveButton1RM} onPress={handleSave}>
               <Text style={styles.buttonText1RM}>Guardar 1RM</Text>
             </TouchableOpacity>
@@ -137,62 +136,46 @@ export const HomeScreen = ({ navigation }) => {
               {estimations.map((item) => (
                 <View key={item.reps} style={styles.gridItem}>
                   <Text style={styles.repsText}>{item.reps}RM</Text>
-                  <Text style={styles.weightTextInput}>{item.weight !== '' ? item.weight : ''}</Text>
+                  <Text style={styles.weightTextInput}>
+                    {item.weight !== '' ? item.weight : ''}
+                  </Text>
                   <Text style={styles.kgText}>kg</Text>
                 </View>
               ))}
             </View>
 
             <View style={styles.percentagesContainer}>
-              <View>
-                <Text style={styles.textPorcent}>Porcentajes</Text>
-              </View>
+              <Text style={styles.textPorcent}>Porcentajes del 1RM</Text>
               <View style={styles.percentagesBox}>
-                <View style={styles.column}>
+                {/* Columna 1 */} 
+                <View style={styles.column1}>
                   {firstColumn.map((item) => (
-                    <View key={item.percentage} style={styles.row}>
+                    <View key={item.percentage} style={styles.invisibleBox}>
                       <Text style={styles.percentageTextLeft}>{item.percentage}%</Text>
                       <Text style={styles.weightTextLeft}>{item.weight} kg</Text>
                     </View>
                   ))}
                 </View>
 
-                <View style={styles.separator} />
-
+                {/* Columna 2 */} 
                 <View style={styles.column2}>
                   {secondColumn.map((item) => (
-                    <View key={item.percentage} style={styles.row}>
-                      <Text style={styles.percentageTextRight}>{item.percentage}%</Text>
-                      <Text style={styles.weightTextRight}>{item.weight} kg</Text>
+                    <View key={item.percentage} style={styles.invisibleBox}>
+                      <Text style={styles.percentageTextLeft}>{item.percentage}%</Text>
+                      <Text style={styles.weightTextLeft}>{item.weight} kg</Text>
                     </View>
                   ))}
                 </View>
               </View>
             </View>
-
-            <TouchableOpacity onPress={showDatepicker}>
-              <Text style={styles.buttonText1RM}>Seleccionar Fecha</Text>
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode='date'
-                display='default'
-                onChange={(_event, selectedDate) => {
-                  setShowDatePicker(false)
-                  if (selectedDate) {
-                    setDate(selectedDate)
-                  }
-                }}
-              />
-            )}
           </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   )
 }
+
+
 
 export const SettingsScreen = () => {
   return (
@@ -211,7 +194,6 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = () => {
-  // Asegúrate de obtener ambos valores del contexto
   const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
 
   useEffect(() => {

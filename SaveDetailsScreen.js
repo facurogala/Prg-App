@@ -1,7 +1,8 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNPickerSelect from 'react-native-picker-select'; // Importa el componente de selector
 import { GlobalContext } from './GlobalContext'; // Importa el contexto global
 import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
 
@@ -14,7 +15,6 @@ const SaveDetailsScreen = ({ route }) => {
   const [selectedDate, setSelectedDate] = useState(new Date(date));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateMode, setDateMode] = useState('date'); // Controlar si se muestra la fecha o la hora
-  const [showExerciseModal, setShowExerciseModal] = useState(false);
   const { setSaved1RMs } = useContext(GlobalContext); // Usa el contexto para actualizar el estado global
 
   const handleSave = async () => {
@@ -74,39 +74,17 @@ const SaveDetailsScreen = ({ route }) => {
       </View>
 
       <Text style={styles.label}>Ejercicio Realizado:</Text>
-      <TouchableOpacity style={styles.pickerButton} onPress={() => setShowExerciseModal(true)}>
-        <Text style={styles.pickerButtonText}>{exercise}</Text>
-      </TouchableOpacity>
-
-      <Modal
-        visible={showExerciseModal}
-        transparent
-        animationType='slide'
-        onRequestClose={() => setShowExerciseModal(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            {['Sentadilla', 'Peso Muerto', 'Banco Plano'].map((ex) => (
-              <TouchableOpacity
-                key={ex}
-                style={styles.optionButton}
-                onPress={() => {
-                  setExercise(ex.charAt(0).toUpperCase() + ex.slice(1).toLowerCase());
-                  setShowExerciseModal(false);
-                }}
-              >
-                <Text style={styles.optionTextEx}>{ex}</Text>
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={[styles.optionButton, styles.cancelButton]}
-              onPress={() => setShowExerciseModal(false)}
-            >
-              <Text style={styles.optionText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <RNPickerSelect
+        onValueChange={(value) => setExercise(value)}
+        items={[
+          { label: 'Sentadilla', value: 'Sentadilla' },
+          { label: 'Peso Muerto', value: 'Peso Muerto' },
+          { label: 'Banco Plano', value: 'Banco Plano' },
+        ]}
+        placeholder={{ label: 'Elige un ejercicio...', value: null }}
+        style={pickerSelectStyles}
+        value={exercise}
+      />
 
       <Text style={styles.label}>Notas:</Text>
       <TextInput
@@ -189,17 +167,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: '#fff',
   },
-  pickerButton: {
-    padding: 10,
-    backgroundColor: '#212836',
-    borderRadius: 5,
-    marginBottom: 10,
-  },
-  pickerButtonText: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#D9E92C',
-  },
   dateTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -252,41 +219,40 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     padding: 10,
-    backgroundColor: '#FF6347',
-    borderRadius: 5,
+    backgroundColor: '#FF6347',  // Fondo rojo
+    borderWidth: 0,  // Sin bordes
+    borderRadius: 5,  // Bordes redondeados opcionales
   },
   cancelButtonText: {
     color: 'white',
     textAlign: 'center',
-    color: 'black',
-  },
-  modalBackground: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContainer: {
-    backgroundColor: '#0D1520',
-    padding: 20,
-    borderRadius: 10,
-    width: 300,
-  },
-  optionButton: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#D9E92C',
-  },
-  optionText: {
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  optionTextEx : {
-    textAlign: 'center',
-    fontSize: 16,
     color: 'white',
-  }
-  
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#212836',
+    borderRadius: 5,
+    color: 'white',
+    paddingRight: 30, // Para ícono de dropdown
+    backgroundColor: '#212836',
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#212836',
+    borderRadius: 5,
+    color: 'white',
+    paddingRight: 30, // Para ícono de dropdown
+    backgroundColor: '#212836',
+  },
 });
 
 export default SaveDetailsScreen;

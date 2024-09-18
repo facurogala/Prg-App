@@ -122,7 +122,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     paddingHorizontal: width * 0.03,
-    marginTop: height * 0.005,
+    marginTop: height * 0.001,
     width: '100%',
     height: height * 0.1 // Ajusta según lo que necesites
   },
@@ -264,41 +264,18 @@ export const styles = StyleSheet.create({
     right: 25
 
   },
-  column: {
+  column1: {
     flex: 1,
-    alignItems: 'center', // Cambia a 'center' para centrar los elementos de esta columna
-    paddingHorizontal: 1,
-    marginHorizontal: height * 0.01
-
+    alignItems: 'center' // Cambia a 'center' para centrar los elementos de esta columna
   },
   column2: {
     flex: 1,
-    alignItems: 'center', // Cambia a 'center' para centrar los elementos de esta columna
-    paddingHorizontal: 10
+    alignItems: 'center' // Cambia a 'center' para centrar los elementos de esta columna
 
-  },
-  percentageTextRight: {
-    color: '#bbb',
-    fontSize: 20,
-    marginHorizontal: height * 0.01,
-    marginRight: height * 0.04
-  },
-  percentageTextLeft: {
-    color: '#bbb',
-    fontSize: 20,
-    marginRight: height * 0.01
   },
   weightTextLeft: {
     color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginHorizontal: height * 0.03
-  },
-
-  weightTextRight: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold'
+    fontSize: 24,
   },
 
   scrollViewContent: {
@@ -338,60 +315,59 @@ export const styles = StyleSheet.create({
     marginHorizontal: height * 0.02,
     marginTop: height * 0.53,
     marginBottom: height * 0.10,
-    height: 250
-
-  },
-
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 5,
-    marginHorizontal: -10,
-    marginLeft: height * 0.011,
-    alignSelf: 'flex-start'
-
+    height: 290
   },
   percentagesBox: {
     flex: 1,
     flexDirection: 'row', // Alinea las columnas horizontalmente
     marginTop: 50,
-    marginBottom: 20,
+    marginBottom: 30,
     height: height * 0.20,
     justifyContent: 'center', // Centra verticalmente en la pantalla
-    alignItems: 'center' // Centra horizontalmente en la pantalla
+    alignItems: 'center', // Centra horizontalmente en la pantalla
 
-  },
-
-  separator: {
-    height: 1,
-    marginTop: 10,
-    marginRight: 10
   },
 
   textPorcent: {
     position: 'absolute',
-    bottom: 90, // Fija la distancia desde la parte inferior de la pantalla
-    width: width * 0.4,
+    bottom: height * 0.3 + 8,
+    width: width * 0.8,
     zIndex: 1,
     textAlign: 'center',
     color: '#D9E92C',
-    fontSize: 26,
-    fontWeight: 'bold',
-    left: (width * 0.6) / 2.5
+    fontSize: 20
   },
   buttonText1RM: {
     color: '#D9E92C',
     fontWeight: 'bold',
-    fontSize: 16
+    fontSize: 16,
+   
   },
 
   saveButton1RM: {
-    backgroundColor: '#212836',
-    height: 40, // Define una altura específica para el botón
-    paddingHorizontal: width * 0.1,
-    borderRadius: 5,
-    justifyContent: 'center', // Centra el contenido verticalmente
+      backgroundColor: '#212836',
+      height: height * 0.05, // Ajusta la altura relativa a la altura de la pantalla
+      width: width * 0.9 + 7, // Ajusta la anchura relativa al ancho de la pantalla
+      maxWidth: 400, // Limita el ancho máximo para pantallas grandes
+      borderRadius: 5,
+      justifyContent: 'center', // Centra el contenido verticalmente
+      alignItems: 'center',
+      marginTop: height * 0.01,
+     
+  },
+  percentageTextLeft: {
+    color: '#bbb',
+    fontSize:20,
+    width: 50, // Establece un ancho fijo para los porcentajes
+    textAlign: 'right', // Alinea el texto a la derecha para uniformidad
+    marginRight: 5 // Ajusta este valor si necesitas más separación
+  },
+  invisibleBox: {
+    flexDirection: 'row',
+    padding: 5,
+    marginVertical: height * 0.001,
+    marginHorizontal: 10,
     alignItems: 'center',
-    marginTop: height * 0.01
+    justifyContent: 'space-between',
   }
 })
