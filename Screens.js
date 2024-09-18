@@ -147,7 +147,7 @@ export const HomeScreen = ({ navigation }) => {
             <View style={styles.percentagesContainer}>
               <Text style={styles.textPorcent}>Porcentajes del 1RM</Text>
               <View style={styles.percentagesBox}>
-                {/* Columna 1 */} 
+                {/* Columna 1 */}
                 <View style={styles.column1}>
                   {firstColumn.map((item) => (
                     <View key={item.percentage} style={styles.invisibleBox}>
@@ -157,7 +157,7 @@ export const HomeScreen = ({ navigation }) => {
                   ))}
                 </View>
 
-                {/* Columna 2 */} 
+                {/* Columna 2 */}
                 <View style={styles.column2}>
                   {secondColumn.map((item) => (
                     <View key={item.percentage} style={styles.invisibleBox}>
@@ -174,8 +174,6 @@ export const HomeScreen = ({ navigation }) => {
     </KeyboardAvoidingView>
   )
 }
-
-
 
 export const SettingsScreen = () => {
   return (
@@ -219,18 +217,45 @@ export const PercentageScreen = () => {
   }
 
   return (
-    <GlobalContainer>
+    <GlobalContainer style={{ flex: 1 }}>
       <ScrollView style={styles.containerPercentage}>
         {saved1RMs.length > 0
           ? (
               saved1RMs.map((item, index) => (
                 <View key={index} style={styles.saved1RMBox}>
-                  <Text style={styles.savedText}>1RM: {item.oneRM} kg</Text>
-                  <Text style={styles.savedText}>Peso: {item.kg} kg</Text>
-                  <Text style={styles.savedText}>Repeticiones: {item.reps}</Text>
-                  <Text style={styles.savedText}>Fecha: {item.date}</Text>
+                  <View style={styles.headerRow}>
+                    <Text style={styles.exerciseName}>{item.exercise}</Text>
+                    <Text style={styles.dateText}>{item.date}</Text>
+                  </View>
+
+                  <View style={styles.mainRow}>
+                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+
+                    <View style={styles.detailsColumn}>
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>Kilos</Text>
+                        <Text style={styles.detailValue}>{item.kg}</Text>
+                      </View>
+
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>Series</Text>
+                        <Text style={styles.detailValue}>{item.series}</Text>
+                      </View>
+
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>Reps</Text>
+                        <Text style={styles.detailValue}>{item.reps}</Text>
+                      </View>
+
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>Rpe</Text>
+                        <Text style={styles.detailValue}>{item.rpe}</Text>
+                      </View>
+                    </View>
+                  </View>
+
                   <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
-                    <Text style={{ color: 'red', marginTop: 10 }}>Eliminar</Text>
+                    <Text style={styles.savedTextDelete}>Eliminar</Text>
                   </TouchableOpacity>
                 </View>
               ))

@@ -145,14 +145,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 10,
-    color: '#D9E92C',
-    alignContent: 'center',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
   label: {
     marginBottom: 10,
     fontSize: 16,
@@ -213,18 +205,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   saveButtonText: {
-    color: 'white',
     textAlign: 'center',
     color: 'black',
   },
   cancelButton: {
     padding: 10,
-    backgroundColor: '#FF6347',  // Fondo rojo
-    borderWidth: 0,  // Sin bordes
-    borderRadius: 5,  // Bordes redondeados opcionales
+    backgroundColor: '#FF6347',
+    borderRadius: 5,
   },
   cancelButtonText: {
-    color: 'white',
     textAlign: 'center',
     color: 'white',
   },

@@ -217,18 +217,7 @@ export const styles = StyleSheet.create({
   },
   navHome: {
     marginHorizontal: 20 // Ajusta el margen según tus necesidades
-  },
-  containerPercentage: {
-    flex: 1,
-    backgroundColor: '#0D1520'
-  },
-  saved1RMBox: {
-    flex: 1,
-    height: height * 0.11,
-    backgroundColor: '#212836',
-    borderRadius: 5,
-    justifyContent: 'center',
-    alignItems: 'center'
+
   },
   Profile: {
     marginHorizontal: 20
@@ -275,7 +264,7 @@ export const styles = StyleSheet.create({
   },
   weightTextLeft: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 24
   },
 
   scrollViewContent: {
@@ -324,7 +313,7 @@ export const styles = StyleSheet.create({
     marginBottom: 30,
     height: height * 0.20,
     justifyContent: 'center', // Centra verticalmente en la pantalla
-    alignItems: 'center', // Centra horizontalmente en la pantalla
+    alignItems: 'center' // Centra horizontalmente en la pantalla
 
   },
 
@@ -340,24 +329,24 @@ export const styles = StyleSheet.create({
   buttonText1RM: {
     color: '#D9E92C',
     fontWeight: 'bold',
-    fontSize: 16,
-   
+    fontSize: 16
+
   },
 
   saveButton1RM: {
-      backgroundColor: '#212836',
-      height: height * 0.05, // Ajusta la altura relativa a la altura de la pantalla
-      width: width * 0.9 + 7, // Ajusta la anchura relativa al ancho de la pantalla
-      maxWidth: 400, // Limita el ancho máximo para pantallas grandes
-      borderRadius: 5,
-      justifyContent: 'center', // Centra el contenido verticalmente
-      alignItems: 'center',
-      marginTop: height * 0.01,
-     
+    backgroundColor: '#212836',
+    height: height * 0.05, // Ajusta la altura relativa a la altura de la pantalla
+    width: width * 0.9 + 7, // Ajusta la anchura relativa al ancho de la pantalla
+    maxWidth: 400, // Limita el ancho máximo para pantallas grandes
+    borderRadius: 5,
+    justifyContent: 'center', // Centra el contenido verticalmente
+    alignItems: 'center',
+    marginTop: height * 0.01
+
   },
   percentageTextLeft: {
     color: '#bbb',
-    fontSize:20,
+    fontSize: 20,
     width: 50, // Establece un ancho fijo para los porcentajes
     textAlign: 'right', // Alinea el texto a la derecha para uniformidad
     marginRight: 5 // Ajusta este valor si necesitas más separación
@@ -368,6 +357,77 @@ export const styles = StyleSheet.create({
     marginVertical: height * 0.001,
     marginHorizontal: 10,
     alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  containerPercentage: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    height: 50,
+  },
+  saved1RMBox: {
+    backgroundColor: '#1D2533',
+    padding: 1,
+    borderRadius: 5,
+    marginBottom: 15
+  },
+  headerRow: {
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  exerciseName: {
+    paddingTop: 5,
+    fontSize: 18,
+    color: '#D9E92C', // Color amarillo para el nombre del ejercicio
+    marginHorizontal: 15
+
+  },
+  dateText: {
+    fontSize: 14,
+    color: 'white', // Color gris para la fecha
+    marginHorizontal: 15,
+    paddingTop: 5
+  },
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  oneRMText: {
+    fontSize: 30,
+    color: '#fff', // Color blanco para el 1RM
+    marginHorizontal: 20
+  },
+  detailsColumn: {
+    flexDirection: 'row',
+    width: '100%'
+
+  },
+  detailItem: {
+    marginLeft: 20, // Espaciado entre cada detalle
+    marginHorizontal: 1,
+    paddingHorizontal: -10
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#9E9E9E', // Color gris para los labels (Kg, Series, Reps, Rpe)
+    textAlign: 'center'
+
+  },
+  detailValue: {
+    fontSize: 16,
+    color: '#fff', // Color blanco para los valores
+    textAlign: 'center'
+  },
+  savedTextDelete: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10
+  },
+  noDataText: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    marginTop: 20
   }
 })
