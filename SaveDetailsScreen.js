@@ -10,7 +10,7 @@ const SaveDetailsScreen = ({ route }) => {
   const navigation = useNavigation(); // Usar el hook de navegación
 
   const [note, setNote] = useState('');
-  const [exercise, setExercise] = useState('sentadilla');
+  const [exercise, setExercise] = useState('Elegir');
   const [selectedDate, setSelectedDate] = useState(new Date(date));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateMode, setDateMode] = useState('date'); // Controlar si se muestra la fecha o la hora
@@ -57,7 +57,21 @@ const SaveDetailsScreen = ({ route }) => {
 
   return (
     <View style={styles.detailsContainer}>
-      <Text style={styles.title}>Detalles del Levantamiento</Text>
+      {/* Ajuste para mostrar "Kilaje", "Repeticiones" y "1RM Estimado" uno al lado del otro */}
+      <View style={styles.summaryRow}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Kilogramos</Text>
+          <Text style={styles.summaryValue}>{kg} kg</Text>
+        </View>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Reps</Text>
+          <Text style={styles.summaryValue}>{reps}</Text>
+        </View>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>1RM Estimado</Text>
+          <Text style={styles.summaryValue}>{oneRM} kg</Text>
+        </View>
+      </View>
 
       <Text style={styles.label}>Ejercicio Realizado:</Text>
       <TouchableOpacity style={styles.pickerButton} onPress={() => setShowExerciseModal(true)}>
@@ -67,7 +81,7 @@ const SaveDetailsScreen = ({ route }) => {
       <Modal
         visible={showExerciseModal}
         transparent
-        animationType="slide"
+        animationType='slide'
         onRequestClose={() => setShowExerciseModal(false)}
       >
         <View style={styles.modalBackground}>
@@ -77,11 +91,11 @@ const SaveDetailsScreen = ({ route }) => {
                 key={ex}
                 style={styles.optionButton}
                 onPress={() => {
-                  setExercise(ex.toLowerCase());
+                  setExercise(ex.charAt(0).toUpperCase() + ex.slice(1).toLowerCase());
                   setShowExerciseModal(false);
                 }}
               >
-                <Text style={styles.optionText}>{ex}</Text>
+                <Text style={styles.optionTextEx}>{ex}</Text>
               </TouchableOpacity>
             ))}
             <TouchableOpacity
@@ -97,23 +111,31 @@ const SaveDetailsScreen = ({ route }) => {
       <Text style={styles.label}>Notas:</Text>
       <TextInput
         style={styles.textInput}
-        placeholder="Escribe un comentario"
+        placeholder='Escribe un comentario'
+        placeholderTextColor='white'
         value={note}
         onChangeText={setNote}
         multiline
+        maxLength={500}
       />
 
       <Text style={styles.label}>Fecha y Hora:</Text>
       <View style={styles.dateTimeContainer}>
-        <TouchableOpacity onPress={() => { setShowDatePicker(true); setDateMode('date'); }}>
-          <Text style={styles.dateTimeText}>
-            {selectedDate.toLocaleDateString()}
-          </Text>
+        <TouchableOpacity
+          onPress={() => {
+            setShowDatePicker(true);
+            setDateMode('date');
+          }}
+        >
+          <Text style={styles.dateTimeText}>{selectedDate.toLocaleDateString()}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { setShowDatePicker(true); setDateMode('time'); }}>
-          <Text style={styles.dateTimeText}>
-            {selectedDate.toLocaleTimeString()}
-          </Text>
+        <TouchableOpacity
+          onPress={() => {
+            setShowDatePicker(true);
+            setDateMode('time');
+          }}
+        >
+          <Text style={styles.dateTimeText}>{selectedDate.toLocaleTimeString()}</Text>
         </TouchableOpacity>
       </View>
 
@@ -123,14 +145,9 @@ const SaveDetailsScreen = ({ route }) => {
           mode={dateMode}
           display="default"
           onChange={handleDateChange}
+          themeVariant="dark"
         />
       )}
-
-      <View style={styles.summaryContainer}>
-        <Text>Kilaje: {kg} kg</Text>
-        <Text>Repeticiones: {reps}</Text>
-        <Text>1RM Estimado: {oneRM} kg</Text>
-      </View>
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelButton}>
@@ -146,34 +163,42 @@ const SaveDetailsScreen = ({ route }) => {
 
 const styles = StyleSheet.create({
   detailsContainer: {
+    backgroundColor: '#0D1520',
     flex: 1,
     padding: 20,
   },
   title: {
     fontSize: 24,
     marginBottom: 10,
+    color: '#D9E92C',
+    alignContent: 'center',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   label: {
-    marginTop: 10,
+    marginBottom: 10,
     fontSize: 16,
+    color: '#ccc',
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#212836',
     padding: 10,
-    marginTop: 5,
+    marginTop: 1,
     marginBottom: 10,
     borderRadius: 5,
+    color: '#fff',
   },
   pickerButton: {
     padding: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#212836',
     borderRadius: 5,
     marginBottom: 10,
   },
   pickerButtonText: {
     fontSize: 16,
     textAlign: 'center',
+    color: '#D9E92C',
   },
   dateTimeContainer: {
     flexDirection: 'row',
@@ -183,12 +208,32 @@ const styles = StyleSheet.create({
   },
   dateTimeText: {
     fontSize: 16,
-    color: '#007BFF',
+    color: 'white',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#212836',
     borderRadius: 5,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+    color: 'white',
+  },
+  summaryItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  summaryValue: {
+    fontSize: 20,
+    marginTop: 5,
+    color: 'white',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -197,12 +242,13 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     padding: 10,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#D9E92C',
     borderRadius: 5,
   },
   saveButtonText: {
     color: 'white',
     textAlign: 'center',
+    color: 'black',
   },
   cancelButton: {
     padding: 10,
@@ -212,6 +258,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: 'white',
     textAlign: 'center',
+    color: 'black',
   },
   modalBackground: {
     flex: 1,
@@ -220,7 +267,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#0D1520',
     padding: 20,
     borderRadius: 10,
     width: 300,
@@ -228,12 +275,18 @@ const styles = StyleSheet.create({
   optionButton: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#DDD',
+    borderBottomColor: '#D9E92C',
   },
   optionText: {
     textAlign: 'center',
     fontSize: 16,
   },
+  optionTextEx : {
+    textAlign: 'center',
+    fontSize: 16,
+    color: 'white',
+  }
+  
 });
 
 export default SaveDetailsScreen;
