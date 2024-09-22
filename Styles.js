@@ -124,11 +124,11 @@ export const styles = StyleSheet.create({
     paddingHorizontal: width * 0.03,
     marginTop: height * 0.001,
     width: '100%',
-    height: height * 0.1 // Ajusta según lo que necesites
+    height: height * 0.15 // Ajusta según lo que necesites
   },
   gridItem: {
     width: width * 0.21, // Ajusta el tamaño relativo al ancho de la pantalla
-    height: height * 0.11, // Ajusta el tamaño relativo al alto de la pantalla
+    height: height * 0.12, // Ajusta el tamaño relativo al alto de la pantalla
     marginVertical: height * 0.01,
     backgroundColor: '#212836',
     borderRadius: 5,
@@ -140,18 +140,20 @@ export const styles = StyleSheet.create({
   repsText: {
     color: '#D9E92C',
     fontSize: width * 0.05,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    marginTop: height * 0.01
   },
   weightTextInput: {
     fontSize: width * 0.080,
     color: 'white',
     fontWeight: 'bold',
-    marginTop: height * 0.002
+    marginTop: height * 0.001
   },
   kgText: {
-    marginBottom: -2,
+    marginTop: -1,
     fontSize: width * 0.03,
-    color: 'white'
+    color: 'white',
+    marginBottom: height * 0.01
   },
   profileChild: {
     flexDirection: 'row',
@@ -316,15 +318,14 @@ export const styles = StyleSheet.create({
     alignItems: 'center' // Centra horizontalmente en la pantalla
 
   },
-
   textPorcent: {
     position: 'absolute',
-    bottom: height * 0.3 + 8,
+    top: height * 0.01, // Ajustar para que quede en la parte superior
     width: width * 0.8,
-    zIndex: 1,
     textAlign: 'center',
     color: '#D9E92C',
-    fontSize: 20
+    fontSize: 20,
+    fontWeight: 'bold'
   },
   buttonText1RM: {
     color: '#D9E92C',
@@ -362,7 +363,7 @@ export const styles = StyleSheet.create({
   containerPercentage: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height: 50,
+    height: 50
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',

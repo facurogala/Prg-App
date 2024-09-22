@@ -191,20 +191,28 @@ export const ChartScreen = () => {
   )
 }
 
-export const PercentageScreen = () => {
-  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
+export const PercentageScreen = ({ navigation }) => {
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
 
   useEffect(() => {
     const cargarLevantamientos = async () => {
       try {
-        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
-        setSaved1RMs(levantamientosGuardados ? JSON.parse(levantamientosGuardados) : [])
+        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs');
+        const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : [];
+        
+        // Convertir cada item para que solo muestre la fecha en formato "YYYY-MM-DD"
+        const dataWithFormattedDate = parsedData.map(item => ({
+          ...item,
+          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '', // Formatear la fecha si existe
+        }));
+        
+        setSaved1RMs(dataWithFormattedDate);
       } catch (error) {
-        console.error('Error al cargar levantamientos', error)
+        console.error('Error al cargar levantamientos', error);
       }
-    }
-    cargarLevantamientos()
-  }, [])
+    };
+    cargarLevantamientos();
+  }, []);
 
   const eliminarLevantamiento = async (index) => {
     try {
@@ -216,16 +224,33 @@ export const PercentageScreen = () => {
     }
   }
 
+
+
+  const handlePress = (item) => {
+    // Navegar a SaveDetailsScreen pasando los datos del 1RM seleccionado
+    navigation.navigate('SaveDetails', {
+      id: item.id, // Asegúrate de tener un ID o índice único para identificarlo si es necesario
+      exercise: item.exercise,
+      kg: item.kg,
+      reps: item.reps,
+      oneRM: item.oneRM,
+      date: item.date,
+      series: item.series,
+      rpe: item.rpe,
+      notes: item.notes,
+    });
+  };
+
   return (
     <GlobalContainer style={{ flex: 1 }}>
       <ScrollView style={styles.containerPercentage}>
         {saved1RMs.length > 0
-          ? (
-              saved1RMs.map((item, index) => (
-                <View key={index} style={styles.saved1RMBox}>
+          ? saved1RMs.map((item, index) => (
+              <TouchableOpacity key={index} onPress={() => handlePress(item)}>
+                <View style={styles.saved1RMBox}>
                   <View style={styles.headerRow}>
                     <Text style={styles.exerciseName}>{item.exercise}</Text>
-                    <Text style={styles.dateText}>{item.date}</Text>
+                    <Text style={styles.dateText}>{item.formattedDate}</Text>
                   </View>
 
                   <View style={styles.mainRow}>
@@ -254,19 +279,18 @@ export const PercentageScreen = () => {
                     </View>
                   </View>
 
-                  <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
+                    <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
                     <Text style={styles.savedTextDelete}>Eliminar</Text>
                   </TouchableOpacity>
                 </View>
-              ))
-            )
-          : (
-            <Text style={styles.noDataText}>No hay datos guardados.</Text>
-            )}
+              </TouchableOpacity>
+            ))
+          : <Text style={styles.noDataText}>No hay datos guardados.</Text>}
       </ScrollView>
     </GlobalContainer>
   )
 }
+
 
 export const ProfileScreen = () => {
   return (

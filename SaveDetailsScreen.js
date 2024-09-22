@@ -1,47 +1,60 @@
-import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useContext, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNPickerSelect from 'react-native-picker-select'; // Importa el componente de selector
 import { GlobalContext } from './GlobalContext'; // Importa el contexto global
-import { useNavigation } from '@react-navigation/native'; // Importa el hook de navegación
 
-const SaveDetailsScreen = ({ route }) => {
-  const { kg, reps, oneRM, date } = route.params;
-  const navigation = useNavigation(); // Usar el hook de navegación
-
+const SaveDetailsScreen = ({ route, navigation }) => {
+  const { kg, reps, oneRM, date } = route.params || {};
   const [note, setNote] = useState('');
   const [exercise, setExercise] = useState('Elegir');
-  const [selectedDate, setSelectedDate] = useState(new Date(date));
+  const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateMode, setDateMode] = useState('date'); // Controlar si se muestra la fecha o la hora
   const { setSaved1RMs } = useContext(GlobalContext); // Usa el contexto para actualizar el estado global
 
+  useEffect(() => {
+    if (route.params) {
+      const { note, exercise } = route.params;
+      setNote(note || '');
+      setExercise(exercise || 'Elegir');
+    }
+  }, [route.params]);
+
   const handleSave = async () => {
+    if (exercise === 'Elegir' || !exercise) {
+      Alert.alert('Error', 'Por favor selecciona un ejercicio.');
+      return;
+    }
+  
     const dataToSave = {
       oneRM,
       kg,
       reps,
       note,
       exercise,
-      date: selectedDate.toLocaleDateString(),
+      date: selectedDate.toISOString(), // Asegúrate de guardar la fecha como un string ISO
     };
-
+  
     try {
-      // Obtén los levantamientos guardados actualmente
       const currentData = await AsyncStorage.getItem('@saved1RMs');
       const parsedData = currentData ? JSON.parse(currentData) : [];
-
-      // Agrega el nuevo levantamiento
-      const updatedData = [...parsedData, dataToSave];
-
-      // Guarda los datos actualizados en AsyncStorage
+      const existingIndex = parsedData.findIndex(
+        (item) =>
+          item.oneRM === oneRM && item.kg === kg && item.reps === reps && item.date === date
+      );
+  
+      let updatedData;
+      if (existingIndex !== -1) {
+        parsedData[existingIndex] = dataToSave;
+        updatedData = parsedData;
+      } else {
+        updatedData = [...parsedData, dataToSave];
+      }
+  
       await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData));
-
-      // Actualiza el estado global con los datos actualizados
       setSaved1RMs(updatedData);
-
-      // Navega a la pantalla de porcentajes
       navigation.navigate('PercentageTab');
     } catch (error) {
       console.error('Error al guardar el levantamiento', error);
@@ -57,7 +70,6 @@ const SaveDetailsScreen = ({ route }) => {
 
   return (
     <View style={styles.detailsContainer}>
-      {/* Ajuste para mostrar "Kilaje", "Repeticiones" y "1RM Estimado" uno al lado del otro */}
       <View style={styles.summaryRow}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Kilogramos</Text>
@@ -89,7 +101,7 @@ const SaveDetailsScreen = ({ route }) => {
       <Text style={styles.label}>Notas:</Text>
       <TextInput
         style={styles.textInput}
-        placeholder='Escribe un comentario'
+        placeholder='Escribe un comentario (opcional)'
         placeholderTextColor='white'
         value={note}
         onChangeText={setNote}
@@ -121,9 +133,9 @@ const SaveDetailsScreen = ({ route }) => {
         <DateTimePicker
           value={selectedDate}
           mode={dateMode}
-          display="default"
+          display='default'
           onChange={handleDateChange}
-          themeVariant="dark"
+          themeVariant='dark'
         />
       )}
 
@@ -138,7 +150,6 @@ const SaveDetailsScreen = ({ route }) => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#0D1520',
@@ -228,7 +239,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: '#212836',
     borderRadius: 5,
     color: 'white',
-    paddingRight: 30, // Para ícono de dropdown
+    paddingRight: 30,
     backgroundColor: '#212836',
   },
   inputAndroid: {
@@ -239,7 +250,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderColor: '#212836',
     borderRadius: 5,
     color: 'white',
-    paddingRight: 30, // Para ícono de dropdown
+    paddingRight: 30,
     backgroundColor: '#212836',
   },
 });
