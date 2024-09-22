@@ -16,7 +16,6 @@ import ProfileIcon from './assets/Profile.svg'
 const Tab = createBottomTabNavigator()
 const Stack = createStackNavigator()
 
-// Navegador de pestañas
 const BottomTabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({

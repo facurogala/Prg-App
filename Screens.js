@@ -192,27 +192,27 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = ({ navigation }) => {
-  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
 
   useEffect(() => {
     const cargarLevantamientos = async () => {
       try {
-        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs');
-        const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : [];
-        
+        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
+        const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
+
         // Convertir cada item para que solo muestre la fecha en formato "YYYY-MM-DD"
         const dataWithFormattedDate = parsedData.map(item => ({
           ...item,
-          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '', // Formatear la fecha si existe
-        }));
-        
-        setSaved1RMs(dataWithFormattedDate);
+          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '' // Formatear la fecha si existe
+        }))
+
+        setSaved1RMs(dataWithFormattedDate)
       } catch (error) {
-        console.error('Error al cargar levantamientos', error);
+        console.error('Error al cargar levantamientos', error)
       }
-    };
-    cargarLevantamientos();
-  }, []);
+    }
+    cargarLevantamientos()
+  }, [])
 
   const eliminarLevantamiento = async (index) => {
     try {
@@ -223,8 +223,6 @@ export const PercentageScreen = ({ navigation }) => {
       console.error('Error al eliminar el levantamiento', error)
     }
   }
-
-
 
   const handlePress = (item) => {
     // Navegar a SaveDetailsScreen pasando los datos del 1RM seleccionado
@@ -237,60 +235,59 @@ export const PercentageScreen = ({ navigation }) => {
       date: item.date,
       series: item.series,
       rpe: item.rpe,
-      notes: item.notes,
-    });
-  };
+      notes: item.notes
+    })
+  }
 
   return (
     <GlobalContainer style={{ flex: 1 }}>
       <ScrollView style={styles.containerPercentage}>
         {saved1RMs.length > 0
           ? saved1RMs.map((item, index) => (
-              <TouchableOpacity key={index} onPress={() => handlePress(item)}>
-                <View style={styles.saved1RMBox}>
-                  <View style={styles.headerRow}>
-                    <Text style={styles.exerciseName}>{item.exercise}</Text>
-                    <Text style={styles.dateText}>{item.formattedDate}</Text>
-                  </View>
+            <TouchableOpacity key={index} onPress={() => handlePress(item)}>
+              <View style={styles.saved1RMBox}>
+                <View style={styles.headerRow}>
+                  <Text style={styles.exerciseName}>{item.exercise}</Text>
+                  <Text style={styles.dateText}>{item.formattedDate}</Text>
+                </View>
 
-                  <View style={styles.mainRow}>
-                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+                <View style={styles.mainRow}>
+                  <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
 
-                    <View style={styles.detailsColumn}>
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Kilos</Text>
-                        <Text style={styles.detailValue}>{item.kg}</Text>
-                      </View>
+                  <View style={styles.detailsColumn}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Kilos</Text>
+                      <Text style={styles.detailValue}>{item.kg}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Series</Text>
-                        <Text style={styles.detailValue}>{item.series}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Series</Text>
+                      <Text style={styles.detailValue}>{item.series}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Reps</Text>
-                        <Text style={styles.detailValue}>{item.reps}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Reps</Text>
+                      <Text style={styles.detailValue}>{item.reps}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Rpe</Text>
-                        <Text style={styles.detailValue}>{item.rpe}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Rpe</Text>
+                      <Text style={styles.detailValue}>{item.rpe}</Text>
                     </View>
                   </View>
-
-                    <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
-                    <Text style={styles.savedTextDelete}>Eliminar</Text>
-                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            ))
+
+                <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
+                  <Text style={styles.savedTextDelete}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
           : <Text style={styles.noDataText}>No hay datos guardados.</Text>}
       </ScrollView>
     </GlobalContainer>
   )
 }
-
 
 export const ProfileScreen = () => {
   return (
