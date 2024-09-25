@@ -235,7 +235,7 @@ export const PercentageScreen = ({ navigation }) => {
       date: item.date,
       series: item.series,
       rpe: item.rpe,
-      notes: item.notes
+      note: item.notes
     })
   }
 
@@ -248,7 +248,7 @@ export const PercentageScreen = ({ navigation }) => {
               <View style={styles.saved1RMBox}>
                 <View style={styles.headerRow}>
                   <Text style={styles.exerciseName}>{item.exercise}</Text>
-                  <Text style={styles.dateText}>{item.formattedDate}</Text>
+                  <Text style={styles.dateText}>{item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}</Text>
                 </View>
 
                 <View style={styles.mainRow}>

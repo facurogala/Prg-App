@@ -1,72 +1,73 @@
-import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNPickerSelect from 'react-native-picker-select'; // Importa el componente de selector
-import { GlobalContext } from './GlobalContext'; // Importa el contexto global
+import React, { useState, useContext, useEffect } from 'react'
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import DateTimePicker from '@react-native-community/datetimepicker'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import RNPickerSelect from 'react-native-picker-select' // Importa el componente de selector
+import { GlobalContext } from './GlobalContext' // Importa el contexto global
 
 const SaveDetailsScreen = ({ route, navigation }) => {
-  const { kg, reps, oneRM, date } = route.params || {};
-  const [note, setNote] = useState('');
-  const [exercise, setExercise] = useState('Elegir');
-  const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()));
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateMode, setDateMode] = useState('date'); // Controlar si se muestra la fecha o la hora
-  const { setSaved1RMs } = useContext(GlobalContext); // Usa el contexto para actualizar el estado global
+  const { kg, reps, oneRM, date } = route.params || {}
+  const [note, setNote] = useState('')
+  const [exercise, setExercise] = useState('Elegir')
+  const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()))
+  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [dateMode, setDateMode] = useState('date') // Controlar si se muestra la fecha o la hora
+  const { setSaved1RMs } = useContext(GlobalContext) // Usa el contexto para actualizar el estado global
 
   useEffect(() => {
     if (route.params) {
-      const { note, exercise } = route.params;
-      setNote(note || '');
-      setExercise(exercise || 'Elegir');
+      const { note, exercise } = route.params
+      setNote(note || '')
+      setExercise(exercise || 'Elegir')
+      setSelectedDate(date ? new Date(date) : new Date())
     }
-  }, [route.params]);
+  }, [route.params])
 
   const handleSave = async () => {
     if (exercise === 'Elegir' || !exercise) {
-      Alert.alert('Error', 'Por favor selecciona un ejercicio.');
-      return;
+      Alert.alert('Error', 'Por favor selecciona un ejercicio.')
+      return
     }
-  
+
     const dataToSave = {
       oneRM,
       kg,
       reps,
       note,
       exercise,
-      date: selectedDate.toISOString(), // Asegúrate de guardar la fecha como un string ISO
-    };
-  
+      date: selectedDate.toISOString() // Asegúrate de guardar la fecha como un string ISO
+    }
+
     try {
-      const currentData = await AsyncStorage.getItem('@saved1RMs');
-      const parsedData = currentData ? JSON.parse(currentData) : [];
+      const currentData = await AsyncStorage.getItem('@saved1RMs')
+      const parsedData = currentData ? JSON.parse(currentData) : []
       const existingIndex = parsedData.findIndex(
         (item) =>
           item.oneRM === oneRM && item.kg === kg && item.reps === reps && item.date === date
-      );
-  
-      let updatedData;
-      if (existingIndex !== -1) {
-        parsedData[existingIndex] = dataToSave;
-        updatedData = parsedData;
-      } else {
-        updatedData = [...parsedData, dataToSave];
-      }
-  
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData));
-      setSaved1RMs(updatedData);
-      navigation.navigate('PercentageTab');
-    } catch (error) {
-      console.error('Error al guardar el levantamiento', error);
-    }
-  };
+      )
 
-  const handleDateChange = (event, selected) => {
-    setShowDatePicker(false);
-    if (selected) {
-      setSelectedDate(selected);
+      let updatedData
+      if (existingIndex !== -1) {
+        parsedData[existingIndex] = dataToSave
+        updatedData = parsedData
+      } else {
+        updatedData = [...parsedData, dataToSave]
+      }
+
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData))
+      setSaved1RMs(updatedData)
+      navigation.navigate('PercentageTab')
+    } catch (error) {
+      console.error('Error al guardar el levantamiento', error)
     }
-  };
+  }
+
+  const handleDateChange = (_event, selected) => {
+    setShowDatePicker(false)
+    if (selected) {
+      setSelectedDate(selected)
+    }
+  }
 
   return (
     <View style={styles.detailsContainer}>
@@ -91,7 +92,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
         items={[
           { label: 'Sentadilla', value: 'Sentadilla' },
           { label: 'Peso Muerto', value: 'Peso Muerto' },
-          { label: 'Banco Plano', value: 'Banco Plano' },
+          { label: 'Banco Plano', value: 'Banco Plano' }
         ]}
         placeholder={{ label: 'Elige un ejercicio...', value: null }}
         style={pickerSelectStyles}
@@ -113,16 +114,16 @@ const SaveDetailsScreen = ({ route, navigation }) => {
       <View style={styles.dateTimeContainer}>
         <TouchableOpacity
           onPress={() => {
-            setShowDatePicker(true);
-            setDateMode('date');
+            setShowDatePicker(true)
+            setDateMode('date')
           }}
         >
           <Text style={styles.dateTimeText}>{selectedDate.toLocaleDateString()}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            setShowDatePicker(true);
-            setDateMode('time');
+            setShowDatePicker(true)
+            setDateMode('time')
           }}
         >
           <Text style={styles.dateTimeText}>{selectedDate.toLocaleTimeString()}</Text>
@@ -148,18 +149,18 @@ const SaveDetailsScreen = ({ route, navigation }) => {
         </TouchableOpacity>
       </View>
     </View>
-  );
-};
+  )
+}
 const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#0D1520',
     flex: 1,
-    padding: 20,
+    padding: 20
   },
   label: {
     marginBottom: 10,
     fontSize: 16,
-    color: '#ccc',
+    color: '#ccc'
   },
   textInput: {
     borderWidth: 1,
@@ -168,13 +169,13 @@ const styles = StyleSheet.create({
     marginTop: 1,
     marginBottom: 10,
     borderRadius: 5,
-    color: '#fff',
+    color: '#fff'
   },
   dateTimeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 5,
-    marginBottom: 10,
+    marginBottom: 10
   },
   dateTimeText: {
     fontSize: 16,
@@ -183,52 +184,52 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: '#212836',
-    borderRadius: 5,
+    borderRadius: 5
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 10,
-    color: 'white',
+    color: 'white'
   },
   summaryItem: {
     alignItems: 'center',
-    flex: 1,
+    flex: 1
   },
   summaryLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: 'white',
+    color: 'white'
   },
   summaryValue: {
     fontSize: 20,
     marginTop: 5,
-    color: 'white',
+    color: 'white'
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginTop: 20
   },
   saveButton: {
     padding: 10,
     backgroundColor: '#D9E92C',
-    borderRadius: 5,
+    borderRadius: 5
   },
   saveButtonText: {
     textAlign: 'center',
-    color: 'black',
+    color: 'black'
   },
   cancelButton: {
     padding: 10,
     backgroundColor: '#FF6347',
-    borderRadius: 5,
+    borderRadius: 5
   },
   cancelButtonText: {
     textAlign: 'center',
-    color: 'white',
-  },
-});
+    color: 'white'
+  }
+})
 
 const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
@@ -240,7 +241,7 @@ const pickerSelectStyles = StyleSheet.create({
     borderRadius: 5,
     color: 'white',
     paddingRight: 30,
-    backgroundColor: '#212836',
+    backgroundColor: '#212836'
   },
   inputAndroid: {
     fontSize: 16,
@@ -251,8 +252,8 @@ const pickerSelectStyles = StyleSheet.create({
     borderRadius: 5,
     color: 'white',
     paddingRight: 30,
-    backgroundColor: '#212836',
-  },
-});
+    backgroundColor: '#212836'
+  }
+})
 
-export default SaveDetailsScreen;
+export default SaveDetailsScreen
