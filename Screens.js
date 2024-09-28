@@ -225,6 +225,7 @@ export const PercentageScreen = ({ navigation }) => {
   }
 
   const handlePress = (item) => {
+    console.log('Item seleccionado:', item)
     // Navegar a SaveDetailsScreen pasando los datos del 1RM seleccionado
     navigation.navigate('SaveDetails', {
       id: item.id, // Asegúrate de tener un ID o índice único para identificarlo si es necesario
@@ -235,7 +236,7 @@ export const PercentageScreen = ({ navigation }) => {
       date: item.date,
       series: item.series,
       rpe: item.rpe,
-      note: item.notes
+      note: item.note
     })
   }
 

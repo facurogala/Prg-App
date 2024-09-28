@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react'
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import RNPickerSelect from 'react-native-picker-select' // Importa el componente de selector
-import { GlobalContext } from './GlobalContext' // Importa el contexto global
+import RNPickerSelect from 'react-native-picker-select'
+import { GlobalContext } from './GlobalContext'
 
 const SaveDetailsScreen = ({ route, navigation }) => {
   const { kg, reps, oneRM, date } = route.params || {}
@@ -11,14 +11,14 @@ const SaveDetailsScreen = ({ route, navigation }) => {
   const [exercise, setExercise] = useState('Elegir')
   const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()))
   const [showDatePicker, setShowDatePicker] = useState(false)
-  const [dateMode, setDateMode] = useState('date') // Controlar si se muestra la fecha o la hora
-  const { setSaved1RMs } = useContext(GlobalContext) // Usa el contexto para actualizar el estado global
+  const [dateMode, setDateMode] = useState('date')
+  const { setSaved1RMs } = useContext(GlobalContext)
 
   useEffect(() => {
     if (route.params) {
-      const { note, exercise } = route.params
-      setNote(note || '')
-      setExercise(exercise || 'Elegir')
+      const { note: incomingNote, exercise: incomingExercise } = route.params
+      setNote(incomingNote || '') // Cargar la nota recibida por parámetros
+      setExercise(incomingExercise || 'Elegir')
       setSelectedDate(date ? new Date(date) : new Date())
     }
   }, [route.params])
@@ -33,9 +33,9 @@ const SaveDetailsScreen = ({ route, navigation }) => {
       oneRM,
       kg,
       reps,
-      note,
+      note, // Incluye la nota que se ingresó
       exercise,
-      date: selectedDate.toISOString() // Asegúrate de guardar la fecha como un string ISO
+      date: selectedDate.toISOString()
     }
 
     try {
@@ -56,7 +56,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 
       await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData))
       setSaved1RMs(updatedData)
-      navigation.navigate('PercentageTab')
+      navigation.navigate('PercentageTab', { note: note }) // Navega y asegúrate de pasar la nota
     } catch (error) {
       console.error('Error al guardar el levantamiento', error)
     }

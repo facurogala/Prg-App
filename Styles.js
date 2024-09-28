@@ -246,7 +246,6 @@ export const styles = StyleSheet.create({
   },
   settingButton: {
     position: 'absolute',
-    backgroundColor: 'white',
     top: 10,
     width: 30,
     height: 30,
@@ -409,7 +408,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: 1,
     paddingHorizontal: -10
   },
-  detailLabel: {
+  detailText: {
     fontSize: 12,
     color: '#9E9E9E', // Color gris para los labels (Kg, Series, Reps, Rpe)
     textAlign: 'center'
@@ -430,5 +429,26 @@ export const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     marginTop: 20
+  },
+  tonnageTitle: {
+    fontWeight: 'bold',
+    color: '#e2e8f0',
+    flex: 1,
+    textAlign: 'center'
+  },
+  weekBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8
+  },
+  weekText: {
+    color: '#cbd5e0',
+    flex: 1,
+    textAlign: 'center'
+  },
+  detailLabel: {
+    color: '#cbd5e0',
+    marginRight: 4
   }
+
 })
