@@ -10,11 +10,13 @@ import {
   BackHandler,
   ScrollView
 } from 'react-native'
+import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler'
 import { styles } from './Styles'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlobalContainer from './GlobalContainer'
+import SettingIcon from './assets/Setting.svg'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -97,7 +99,7 @@ export const HomeScreen = ({ navigation }) => {
             style={styles.settingButton}
             onPress={() => navigation.navigate('Settings')}
           >
-            <Text style={styles.buttonText1RM}>Settings</Text>
+            <SettingIcon width={24} height={24} />
           </TouchableOpacity>
           <Image style={styles.PrgVerde} source={require('./assets/PRG.png')} />
           <Text style={styles.Calcula1Rmhead}>Calcula tu 1RM</Text>
@@ -200,13 +202,7 @@ export const PercentageScreen = ({ navigation }) => {
         const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
         const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
 
-        // Convertir cada item para que solo muestre la fecha en formato "YYYY-MM-DD"
-        const dataWithFormattedDate = parsedData.map(item => ({
-          ...item,
-          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '' // Formatear la fecha si existe
-        }))
-
-        setSaved1RMs(dataWithFormattedDate)
+        setSaved1RMs(parsedData)
       } catch (error) {
         console.error('Error al cargar levantamientos', error)
       }
@@ -225,10 +221,8 @@ export const PercentageScreen = ({ navigation }) => {
   }
 
   const handlePress = (item) => {
-    console.log('Item seleccionado:', item)
-    // Navegar a SaveDetailsScreen pasando los datos del 1RM seleccionado
     navigation.navigate('SaveDetails', {
-      id: item.id, // Asegúrate de tener un ID o índice único para identificarlo si es necesario
+      id: item.id,
       exercise: item.exercise,
       kg: item.kg,
       reps: item.reps,
@@ -240,53 +234,71 @@ export const PercentageScreen = ({ navigation }) => {
     })
   }
 
+  const renderRightActions = (index) => (
+    <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarLevantamiento(index)}>
+      <Text style={styles.deleteButtonText}>Eliminar</Text>
+    </TouchableOpacity>
+  )
+
   return (
-    <GlobalContainer style={{ flex: 1 }}>
-      <ScrollView style={styles.containerPercentage}>
-        {saved1RMs.length > 0
-          ? saved1RMs.map((item, index) => (
-            <TouchableOpacity key={index} onPress={() => handlePress(item)}>
-              <View style={styles.saved1RMBox}>
-                <View style={styles.headerRow}>
-                  <Text style={styles.exerciseName}>{item.exercise}</Text>
-                  <Text style={styles.dateText}>{item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}</Text>
-                </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <GlobalContainer style={{ flex: 1 }}>
+        <ScrollView style={styles.containerPercentage}>
+          {saved1RMs.length > 0 ? (
+            saved1RMs.map((item, index) => (
+              <Swipeable
+                key={index}
+                renderRightActions={() => renderRightActions(index)}
+                overshootRight={false}
+                rightThreshold={80} // Ajustar para permitir suficiente espacio para el botón
+                containerStyle={styles.swipeableContainer}
+              >
+                <TouchableOpacity
+                  style={styles.saved1RMBox}
+                  onPress={() => handlePress(item)}
+                  activeOpacity={1}
+                >
+                  <View style={styles.headerRow}>
+                    <Text style={styles.exerciseName}>{item.exercise}</Text>
+                    <Text style={styles.dateText}>
+                      {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
+                    </Text>
+                  </View>
 
-                <View style={styles.mainRow}>
-                  <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+                  <View style={styles.mainRow}>
+                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
 
-                  <View style={styles.detailsColumn}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Kilos</Text>
-                      <Text style={styles.detailValue}>{item.kg}</Text>
-                    </View>
+                    <View style={styles.detailsColumn}>
+                      <View style={styles.detailItem}>
+        <Text style={styles.detailLabel}>Kilos</Text>
+        <Text style={styles.detailValue}>{item.kg}</Text>
+      </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Series</Text>
-                      <Text style={styles.detailValue}>{item.series}</Text>
-                    </View>
+                      <View style={styles.detailItem}>
+        <Text style={styles.detailLabel}>Series</Text>
+        <Text style={styles.detailValue}>{item.series}</Text>
+      </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Reps</Text>
-                      <Text style={styles.detailValue}>{item.reps}</Text>
-                    </View>
+                      <View style={styles.detailItem}>
+        <Text style={styles.detailLabel}>Reps</Text>
+        <Text style={styles.detailValue}>{item.reps}</Text>
+      </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Rpe</Text>
-                      <Text style={styles.detailValue}>{item.rpe}</Text>
+                      <View style={styles.detailItem}>
+        <Text style={styles.detailLabel}>Rpe</Text>
+        <Text style={styles.detailValue}>{item.rpe}</Text>
+      </View>
                     </View>
                   </View>
-                </View>
-
-                <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
-                  <Text style={styles.savedTextDelete}>Eliminar</Text>
                 </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          ))
-          : <Text style={styles.noDataText}>No hay datos guardados.</Text>}
-      </ScrollView>
-    </GlobalContainer>
+              </Swipeable>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>No hay datos guardados.</Text>
+          )}
+        </ScrollView>
+      </GlobalContainer>
+    </GestureHandlerRootView>
   )
 }
 
