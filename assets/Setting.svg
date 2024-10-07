@@ -4,7 +4,7 @@
  width="512.000000pt" height="512.000000pt" viewBox="0 0 512.000000 512.000000"
  preserveAspectRatio="xMidYMid meet">
 
-<rect width="100%" height="100%" fill="#060B11"/> <!-- Fondo cambiado a #060B11 -->
+<rect width="100%" height="100%" fill="#0D1520"/> 
 
 <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
 fill="grey" stroke="none"> <!-- Asegúrate de que stroke sea "none" -->

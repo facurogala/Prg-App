@@ -9,6 +9,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
   const { kg, reps, oneRM, date } = route.params || {}
   const [note, setNote] = useState('')
   const [exercise, setExercise] = useState('Elegir')
+  const [rpe, setRpe] = useState(null) // Estado para el RPE, pero ahora es opcional
   const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()))
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [dateMode, setDateMode] = useState('date')
@@ -16,9 +17,10 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     if (route.params) {
-      const { note: incomingNote, exercise: incomingExercise } = route.params
-      setNote(incomingNote || '') // Cargar la nota recibida por parámetros
+      const { note: incomingNote, exercise: incomingExercise, rpe: incomingRpe } = route.params
+      setNote(incomingNote || '')
       setExercise(incomingExercise || 'Elegir')
+      setRpe(incomingRpe || null)
       setSelectedDate(date ? new Date(date) : new Date())
     }
   }, [route.params])
@@ -33,8 +35,9 @@ const SaveDetailsScreen = ({ route, navigation }) => {
       oneRM,
       kg,
       reps,
-      note, // Incluye la nota que se ingresó
+      note,
       exercise,
+      rpe, // Incluye el valor de RPE si se selecciona, pero no es obligatorio
       date: selectedDate.toISOString()
     }
 
@@ -56,7 +59,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 
       await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData))
       setSaved1RMs(updatedData)
-      navigation.navigate('PercentageTab', { note: note }) // Navega y asegúrate de pasar la nota
+      navigation.navigate('PercentageTab', { note: note })
     } catch (error) {
       console.error('Error al guardar el levantamiento', error)
     }
@@ -95,7 +98,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
           { label: 'Banco Plano', value: 'Banco Plano' }
         ]}
         placeholder={{ label: 'Elige un ejercicio...', value: null }}
-        style={pickerSelectStyles}
+        style={pickerSelectDarkStyles} // Aplicar el estilo oscuro
         value={exercise}
       />
 
@@ -108,6 +111,26 @@ const SaveDetailsScreen = ({ route, navigation }) => {
         onChangeText={setNote}
         multiline
         maxLength={500}
+      />
+
+      <Text style={styles.label}>RPE (Opcional):</Text>
+      <RNPickerSelect
+        onValueChange={(value) => setRpe(value)}
+        items={[
+          { label: '1', value: 1 },
+          { label: '2', value: 2 },
+          { label: '3', value: 3 },
+          { label: '4', value: 4 },
+          { label: '5', value: 5 },
+          { label: '6', value: 6 },
+          { label: '7', value: 7 },
+          { label: '8', value: 8 },
+          { label: '9', value: 9 },
+          { label: '10', value: 10 }
+        ]}
+        placeholder={{ label: 'Elige un valor de RPE (opcional)...', value: null }}
+        style={pickerSelectDarkStyles} // Aplicar el estilo oscuro
+        value={rpe}
       />
 
       <Text style={styles.label}>Fecha y Hora:</Text>
@@ -151,6 +174,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
     </View>
   )
 }
+
 const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#0D1520',
@@ -231,7 +255,8 @@ const styles = StyleSheet.create({
   }
 })
 
-const pickerSelectStyles = StyleSheet.create({
+// Estilos personalizados para el picker con fondo oscuro
+const pickerSelectDarkStyles = {
   inputIOS: {
     fontSize: 16,
     paddingVertical: 12,
@@ -253,7 +278,10 @@ const pickerSelectStyles = StyleSheet.create({
     color: 'white',
     paddingRight: 30,
     backgroundColor: '#212836'
+  },
+  modalViewBottom: {
+    backgroundColor: '#0D1520', // Fondo oscuro para el popup
   }
-})
+}
 
 export default SaveDetailsScreen

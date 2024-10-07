@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: '#0D1520', // Color del margen simulado
-    padding: 20 // Simula el margen con padding
+    padding: 10 // Simula el margen con padding
   },
   innerContainer: {
     flex: 1,

@@ -357,12 +357,13 @@ export const styles = StyleSheet.create({
     marginVertical: height * 0.001,
     marginHorizontal: 10,
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    width: '100%',
   },
   containerPercentage: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height: 50
+    height,
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',
@@ -449,6 +450,86 @@ export const styles = StyleSheet.create({
   detailLabel: {
     color: '#cbd5e0',
     marginRight: 4
-  }
-
+  },
+  entrenamientoMensualContainer: {
+    backgroundColor: '#0d1117',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%'
+  },
+  entrenamientoMensualTitle: {
+    fontSize: 18,
+    marginBottom: 10,
+    color: '#ffffff'
+  },
+  headerText: {
+    fontSize: 12,
+    color: '#ffffff'
+  },
+  highlightText: {
+    fontSize: 12,
+    color: '#00c853'
+  },
+  totalsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  totalsText: {
+    fontSize: 12,
+    color: '#ffffff'
+  },
+  semanaContainer: {
+    backgroundColor: '#21262d',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10
+  },
+  semanaText: {
+    fontSize: 12,
+    color: '#ffffff'
+  },
+  totalText: {
+    textAlign: 'right'
+  },
+  nuevaSemanaContainer: {
+    backgroundColor: '#00c853',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10
+  },
+  nuevaSemanaText: {
+    fontSize: 12,
+    color: '#ffffff',
+    textAlign: 'center'
+  },
+  noDataText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#999',
+  },
+  swipeableContainer: {
+    overflow: 'hidden', // Evita el fade al deslizar
+  },
+  deleteButtonContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80, // Asegúrate de que el ancho sea constante
+    height: '100%',
+    backgroundColor: 'red', // Asegura que el fondo del botón sea visible
+  },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 85,
+    height: '84%',
+    backgroundColor: 'red',
+    borderRadius: 5
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16
+  },
 })
