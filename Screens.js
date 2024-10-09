@@ -202,7 +202,17 @@ export const PercentageScreen = ({ navigation }) => {
         const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
         const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
 
+<<<<<<< HEAD
         setSaved1RMs(parsedData)
+=======
+        // Convertir cada item para que solo muestre la fecha en formato "YYYY-MM-DD"
+        const dataWithFormattedDate = parsedData.map(item => ({
+          ...item,
+          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '' // Formatear la fecha si existe
+        }))
+
+        setSaved1RMs(dataWithFormattedDate)
+>>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
       } catch (error) {
         console.error('Error al cargar levantamientos', error)
       }
@@ -230,6 +240,7 @@ export const PercentageScreen = ({ navigation }) => {
       date: item.date,
       series: item.series,
       rpe: item.rpe,
+<<<<<<< HEAD
       note: item.note
     })
   }
@@ -264,10 +275,28 @@ export const PercentageScreen = ({ navigation }) => {
                       {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
                     </Text>
                   </View>
+=======
+      notes: item.notes
+    })
+  }
 
-                  <View style={styles.mainRow}>
-                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+  return (
+    <GlobalContainer style={{ flex: 1 }}>
+      <ScrollView style={styles.containerPercentage}>
+        {saved1RMs.length > 0
+          ? saved1RMs.map((item, index) => (
+            <TouchableOpacity key={index} onPress={() => handlePress(item)}>
+              <View style={styles.saved1RMBox}>
+                <View style={styles.headerRow}>
+                  <Text style={styles.exerciseName}>{item.exercise}</Text>
+                  <Text style={styles.dateText}>{item.formattedDate}</Text>
+                </View>
+>>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
 
+                <View style={styles.mainRow}>
+                  <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+
+<<<<<<< HEAD
                     <View style={styles.detailsColumn}>
                       <View style={styles.detailItem}>
         <Text style={styles.detailLabel}>Kilos</Text>
@@ -299,6 +328,40 @@ export const PercentageScreen = ({ navigation }) => {
         </ScrollView>
       </GlobalContainer>
     </GestureHandlerRootView>
+=======
+                  <View style={styles.detailsColumn}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Kilos</Text>
+                      <Text style={styles.detailValue}>{item.kg}</Text>
+                    </View>
+
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Series</Text>
+                      <Text style={styles.detailValue}>{item.series}</Text>
+                    </View>
+
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Reps</Text>
+                      <Text style={styles.detailValue}>{item.reps}</Text>
+                    </View>
+
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Rpe</Text>
+                      <Text style={styles.detailValue}>{item.rpe}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
+                  <Text style={styles.savedTextDelete}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
+          : <Text style={styles.noDataText}>No hay datos guardados.</Text>}
+      </ScrollView>
+    </GlobalContainer>
+>>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
   )
 }
 
