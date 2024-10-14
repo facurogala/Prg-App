@@ -8,15 +8,20 @@ import {
   TextInput,
   KeyboardAvoidingView,
   BackHandler,
-  ScrollView
+  ScrollView,
+  Dimensions
 } from 'react-native'
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler'
 import { styles } from './Styles'
-import DateTimePicker from '@react-native-community/datetimepicker'
 import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlobalContainer from './GlobalContainer'
 import SettingIcon from './assets/Setting.svg'
+import { LineChart } from 'react-native-chart-kit'
+import { Picker } from '@react-native-picker/picker'
+import moment from 'moment'
+import { useFocusEffect } from '@react-navigation/native'
+import { useCallback } from 'react'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -25,14 +30,14 @@ const isValidInput = (kg, reps) => {
 export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState('')
   const [reps, setReps] = useState('')
-  const [date, setDate] = useState(new Date())
-  const [showDatePicker, setShowDatePicker] = useState(false)
+  const [date] = useState(new Date())
+  const [] = useState(false)
   const [estimations, setEstimations] = useState(
     Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' }))
   )
   const [percentages, setPercentages] = useState([])
 
-  const { add1RM } = useContext(GlobalContext)
+  useContext(GlobalContext)
 
   useEffect(() => {
     const backAction = () => {
@@ -85,10 +90,6 @@ export const HomeScreen = ({ navigation }) => {
         date: date.toISOString() // Pasa la fecha correctamente
       })
     }
-  }
-
-  const showDatepicker = () => {
-    setShowDatePicker(true)
   }
 
   return (
@@ -186,9 +187,129 @@ export const SettingsScreen = () => {
 }
 
 export const ChartScreen = () => {
+  const [chartData, setChartData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
+  const [selectedRange, setSelectedRange] = useState('currentMonth')
+
+  const fetchData = async () => {
+    try {
+      const savedData = await AsyncStorage.getItem('@saved1RMs')
+      const parsedData = savedData ? JSON.parse(savedData) : []
+
+      const validData = parsedData.filter(item =>
+        item && !isNaN(parseFloat(item.oneRM)) && item.date
+      )
+
+      setChartData(validData)
+      filterData(validData, 'currentMonth') // Filtro inicial para el mes actual
+    } catch (error) {
+      console.error('Error al recuperar los datos', error)
+    }
+  }
+
+  const filterData = useCallback((data, range) => {
+    const today = moment()
+    let startDate
+
+    switch (range) {
+      case 'last30Days':
+        startDate = today.clone().subtract(30, 'days')
+        break
+      case 'last90Days':
+        startDate = today.clone().subtract(90, 'days')
+        break
+      case 'last180Days':
+        startDate = today.clone().subtract(180, 'days')
+        break
+      case 'lastYear':
+        startDate = today.clone().subtract(1, 'year')
+        break
+      case 'currentMonth':
+      default:
+        startDate = today.clone().startOf('month')
+    }
+
+    // Filtra los datos en el rango seleccionado
+    const filtered = data.filter(record => {
+      const recordDate = moment(record.date)
+      return recordDate.isSameOrAfter(startDate) && recordDate.isSameOrBefore(today)
+    })
+
+    // Ordena los datos de más antiguo a más reciente
+    const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
+    setFilteredData(sortedData)
+  }, [])
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData()
+    }, [])
+  )
+
+  const data = filteredData.map(record => parseFloat(record.oneRM))
+  const labels = filteredData.map(record =>
+    moment(record.date).format('M/D')
+  )
+
+  const dataForChart = {
+    labels: labels.length > 0 ? labels : ['No Data'],
+    datasets: [
+      {
+        data: data.length > 0 ? data : [0],
+        strokeWidth: 2
+      }
+    ]
+  }
+
   return (
     <View style={styles.containerChart}>
-      <Text style={styles.title}>Chart Screen</Text>
+      <Text style={styles.title}>1RM Chart</Text>
+      <Picker
+        selectedValue={selectedRange}
+        style={{ height: 50, width: 200 }}
+        onValueChange={(itemValue) => {
+          setSelectedRange(itemValue)
+          filterData(chartData, itemValue)
+        }}
+      >
+        <Picker.Item label='Mes Actual' value='currentMonth' />
+        <Picker.Item label='Últimos 30 Días' value='last30Days' />
+        <Picker.Item label='Últimos 90 Días' value='last90Days' />
+        <Picker.Item label='Últimos 180 Días' value='last180Days' />
+        <Picker.Item label='Último Año' value='lastYear' />
+      </Picker>
+      {filteredData.length > 0
+        ? (
+          <LineChart
+            data={dataForChart}
+            width={Dimensions.get('window').width - 32}
+            height={220}
+            chartConfig={{
+              backgroundColor: '#0D1520',
+              backgroundGradientFrom: '#212836',
+              backgroundGradientTo: '#0D1520',
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+              style: {
+                borderRadius: 16
+              },
+              propsForDots: {
+                r: '6',
+                strokeWidth: '2',
+                stroke: '#D9E92C'
+              }
+            }}
+            bezier
+            style={{
+              marginVertical: 8,
+              borderRadius: 16
+            }}
+          />
+          )
+        : (
+          <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
+          )}
     </View>
   )
 }
@@ -202,17 +323,7 @@ export const PercentageScreen = ({ navigation }) => {
         const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
         const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
 
-<<<<<<< HEAD
         setSaved1RMs(parsedData)
-=======
-        // Convertir cada item para que solo muestre la fecha en formato "YYYY-MM-DD"
-        const dataWithFormattedDate = parsedData.map(item => ({
-          ...item,
-          formattedDate: item.date ? new Date(item.date).toISOString().split('T')[0] : '' // Formatear la fecha si existe
-        }))
-
-        setSaved1RMs(dataWithFormattedDate)
->>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
       } catch (error) {
         console.error('Error al cargar levantamientos', error)
       }
@@ -240,7 +351,6 @@ export const PercentageScreen = ({ navigation }) => {
       date: item.date,
       series: item.series,
       rpe: item.rpe,
-<<<<<<< HEAD
       note: item.note
     })
   }
@@ -275,48 +385,30 @@ export const PercentageScreen = ({ navigation }) => {
                       {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
                     </Text>
                   </View>
-=======
-      notes: item.notes
-    })
-  }
 
-  return (
-    <GlobalContainer style={{ flex: 1 }}>
-      <ScrollView style={styles.containerPercentage}>
-        {saved1RMs.length > 0
-          ? saved1RMs.map((item, index) => (
-            <TouchableOpacity key={index} onPress={() => handlePress(item)}>
-              <View style={styles.saved1RMBox}>
-                <View style={styles.headerRow}>
-                  <Text style={styles.exerciseName}>{item.exercise}</Text>
-                  <Text style={styles.dateText}>{item.formattedDate}</Text>
-                </View>
->>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
+                  <View style={styles.mainRow}>
+                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
 
-                <View style={styles.mainRow}>
-                  <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
-
-<<<<<<< HEAD
                     <View style={styles.detailsColumn}>
                       <View style={styles.detailItem}>
-        <Text style={styles.detailLabel}>Kilos</Text>
-        <Text style={styles.detailValue}>{item.kg}</Text>
-      </View>
+                        <Text style={styles.detailLabel}>Kilos</Text>
+                        <Text style={styles.detailValue}>{item.kg}</Text>
+                      </View>
 
                       <View style={styles.detailItem}>
-        <Text style={styles.detailLabel}>Series</Text>
-        <Text style={styles.detailValue}>{item.series}</Text>
-      </View>
+                        <Text style={styles.detailLabel}>Series</Text>
+                        <Text style={styles.detailValue}>{item.series}</Text>
+                      </View>
 
                       <View style={styles.detailItem}>
-        <Text style={styles.detailLabel}>Reps</Text>
-        <Text style={styles.detailValue}>{item.reps}</Text>
-      </View>
+                        <Text style={styles.detailLabel}>Reps</Text>
+                        <Text style={styles.detailValue}>{item.reps}</Text>
+                      </View>
 
                       <View style={styles.detailItem}>
-        <Text style={styles.detailLabel}>Rpe</Text>
-        <Text style={styles.detailValue}>{item.rpe}</Text>
-      </View>
+                        <Text style={styles.detailLabel}>Rpe</Text>
+                        <Text style={styles.detailValue}>{item.rpe}</Text>
+                      </View>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -328,40 +420,38 @@ export const PercentageScreen = ({ navigation }) => {
         </ScrollView>
       </GlobalContainer>
     </GestureHandlerRootView>
-=======
-                  <View style={styles.detailsColumn}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Kilos</Text>
-                      <Text style={styles.detailValue}>{item.kg}</Text>
-                    </View>
+  )
+}
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Series</Text>
-                      <Text style={styles.detailValue}>{item.series}</Text>
-                    </View>
+const screenWidth = Dimensions.get('window').width
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Reps</Text>
-                      <Text style={styles.detailValue}>{item.reps}</Text>
-                    </View>
+export const FullChartScreen = () => {
+  const data = {
+    labels: ['10/01', '10/05', '10/10', '10/15', '10/20', '10/25'],
+    datasets: [
+      {
+        data: [220, 250, 270, 230, 290, 300],
+        color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`
+      }
+    ]
+  }
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Rpe</Text>
-                      <Text style={styles.detailValue}>{item.rpe}</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <TouchableOpacity onPress={() => eliminarLevantamiento(index)}>
-                  <Text style={styles.savedTextDelete}>Eliminar</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          ))
-          : <Text style={styles.noDataText}>No hay datos guardados.</Text>}
-      </ScrollView>
-    </GlobalContainer>
->>>>>>> 3dcb444 (Navegar por la Navbar ahora es posible)
+  return (
+    <View>
+      <LineChart
+        data={data}
+        width={screenWidth}
+        height={300}
+        chartConfig={{
+          backgroundColor: '#0D1520',
+          backgroundGradientFrom: '#1E2923',
+          backgroundGradientTo: '#08130D',
+          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`
+        }}
+        bezier
+      />
+    </View>
   )
 }
 
