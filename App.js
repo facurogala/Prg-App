@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createStackNavigator } from '@react-navigation/stack'
 import { StatusBar } from 'react-native'
-import { HomeScreen, ProfileScreen, ChartScreen, PercentageScreen, SettingsScreen, FullChartScreen } from './Screens'
+import { HomeScreen, ProfileScreen, ChartScreen, PercentageScreen, SettingsScreen } from './Screens'
 import SaveDetailsScreen from './SaveDetailsScreen' // Importa SaveDetailsScreen
 import { GlobalProvider } from './GlobalContext' // Importa el GlobalProvider
 import HomeIcon from './assets/Home.svg'
@@ -72,16 +72,6 @@ const MainStackNavigator = () => (
         headerStyle: { backgroundColor: '#0D1520' },
         headerTintColor: '#fff',
         headerShadowVisible: false
-      }}
-    />
-    <Stack.Screen
-      name='FullChartScreen'
-      component={FullChartScreen}
-      options={{
-        title: 'Gráfico Completo',
-        headerStyle: { backgroundColor: '#0D1520' },
-        headerTintColor: '#fff',
-        headerShadowVisible: false,
       }}
     />
   </Stack.Navigator>

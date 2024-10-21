@@ -19,7 +19,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
     if (route.params) {
       const { note: incomingNote, exercise: incomingExercise, rpe: incomingRpe } = route.params
       setNote(incomingNote || '')
-      setExercise(incomingExercise || 'Elegir')
+ setExercise(incomingExercise || 'Elegir')
       setRpe(incomingRpe || null)
       setSelectedDate(date ? new Date(date) : new Date())
     }

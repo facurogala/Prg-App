@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   BackHandler,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native'
 import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler'
 import { styles } from './Styles'
@@ -190,6 +191,8 @@ export const ChartScreen = () => {
   const [chartData, setChartData] = useState([])
   const [filteredData, setFilteredData] = useState([])
   const [selectedRange, setSelectedRange] = useState('currentMonth')
+  const [showDetailedChart, setShowDetailedChart] = useState(false)
+  const [detailedData, setDetailedData] = useState([])
 
   const fetchData = async () => {
     try {
@@ -237,8 +240,70 @@ export const ChartScreen = () => {
 
     // Ordena los datos de más antiguo a más reciente
     const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
-    setFilteredData(sortedData)
+
+    if (range === 'lastYear') {
+      // Agrupar por mes si el rango es "Último Año"
+      const groupedByMonth = groupByMonth(sortedData)
+      setFilteredData(groupedByMonth)
+    } else {
+      // Agrupar por semana para otros rangos
+      const groupedByWeek = groupByWeek(sortedData)
+      setFilteredData(groupedByWeek)
+    }
   }, [])
+
+  // Agrupar datos por semana
+  const groupByWeek = (data) => {
+    const grouped = {}
+    data.forEach(item => {
+      const weekNumber = moment(item.date).week()
+      if (!grouped[weekNumber]) {
+        grouped[weekNumber] = []
+      }
+      grouped[weekNumber].push(item)
+    })
+
+    // Obtener el 1RM más alto de cada semana
+    return Object.values(grouped).map(weekData => {
+      const maxOneRM = Math.max(...weekData.map(item => parseFloat(item.oneRM)))
+
+      // Calcular el número de la semana dentro del mes
+      const weekOfMonth = Math.min(moment(weekData[0].date).week() - moment(weekData[0].date).startOf('month').week() + 1, 4)
+      // Formato deseado MM-WN
+      const week = moment(weekData[0].date).format('MM') + `-W${weekOfMonth}`
+
+      return {
+        week,
+        maxOneRM,
+        dailyData: weekData // Guardamos los datos diarios de cada semana
+      }
+    })
+  }
+
+  // Agrupar datos por mes
+  const groupByMonth = (data) => {
+    const grouped = {}
+    data.forEach(item => {
+      const month = moment(item.date).format('YYYY-MM')
+      if (!grouped[month]) {
+        grouped[month] = []
+      }
+      grouped[month].push(item)
+    })
+
+    // Obtener el 1RM más alto de cada mes
+    return Object.values(grouped).map(monthData => {
+      const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
+
+      return {
+        month: moment(monthData[0].date).format('MMM YY'),
+        maxOneRM,
+        dailyData: monthData // Guardamos los datos diarios de cada mes
+      }
+    })
+  }
+
+  // Función para mostrar los datos detallados diarios de una semana
 
   useFocusEffect(
     useCallback(() => {
@@ -246,16 +311,45 @@ export const ChartScreen = () => {
     }, [])
   )
 
-  const data = filteredData.map(record => parseFloat(record.oneRM))
-  const labels = filteredData.map(record =>
-    moment(record.date).format('M/D')
-  )
+  const weeklyData = filteredData.map(record => parseFloat(record.maxOneRM))
+  const weeklyLabels = filteredData.map(record => record.week || record.month)
 
-  const dataForChart = {
-    labels: labels.length > 0 ? labels : ['No Data'],
+  const dataForChart = useMemo(() => ({
+    labels: weeklyLabels.length > 0 ? weeklyLabels : ['No Data'],
+    datasets: [{
+      data: weeklyData.length > 0 ? weeklyData : [0],
+      strokeWidth: 2
+    }]
+  }), [weeklyLabels, weeklyData])
+
+  const renderDataPointLabel = (index) => {
+    if (weeklyData[index]) {
+      return (
+        <Text
+          style={{
+            color: 'white',
+            fontSize: 12,
+            textAlign: 'center',
+            position: 'absolute',
+            top: -20,
+            pointerEvents: 'none'
+          }}
+        >
+          {weeklyData[index]}
+        </Text>
+      )
+    }
+    return null
+  }
+
+  // Datos detallados para el gráfico de 1RM diarios de la semana seleccionada
+  const detailedChartData = {
+    labels: detailedData.map(record =>
+      moment(record.date).format('M/D')
+    ),
     datasets: [
       {
-        data: data.length > 0 ? data : [0],
+        data: detailedData.map(record => parseFloat(record.oneRM)),
         strokeWidth: 2
       }
     ]
@@ -278,38 +372,50 @@ export const ChartScreen = () => {
         <Picker.Item label='Últimos 180 Días' value='last180Days' />
         <Picker.Item label='Último Año' value='lastYear' />
       </Picker>
-      {filteredData.length > 0
-        ? (
-          <LineChart
-            data={dataForChart}
-            width={Dimensions.get('window').width - 32}
-            height={220}
-            chartConfig={{
-              backgroundColor: '#0D1520',
-              backgroundGradientFrom: '#212836',
-              backgroundGradientTo: '#0D1520',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
+
+      {filteredData.length > 0 ? (
+        <TouchableOpacity>
+          {filteredData.length > 0 ? (
+            <LineChart
+              data={dataForChart}
+              width={Dimensions.get('window').width - 32}
+              height={300}
+              chartConfig={{
+                backgroundColor: '#0D1520',
+                backgroundGradientFrom: '#212836',
+                backgroundGradientTo: '#0D1520',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                style: {
+                  borderRadius: 16
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '2',
+                  stroke: '#D9E92C'
+                },
+                propsForLabels: {
+                  fontSize: 12
+                }
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
                 borderRadius: 16
-              },
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#D9E92C'
-              }
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16
-            }}
-          />
-          )
-        : (
-          <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
+
+              }}
+              // Renderiza las etiquetas de los puntos sobre el gráfico
+              renderDataPointLabel={renderDataPointLabel}
+            />
+          ) : (
+            <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
           )}
+        </TouchableOpacity>
+      ) : (
+        // Aquí iría el gráfico detallado, si lo necesitas
+        <Text>Gráfico detallado aquí</Text>
+      )}
     </View>
   )
 }
@@ -322,7 +428,6 @@ export const PercentageScreen = ({ navigation }) => {
       try {
         const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
         const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
-
         setSaved1RMs(parsedData)
       } catch (error) {
         console.error('Error al cargar levantamientos', error)
@@ -355,103 +460,78 @@ export const PercentageScreen = ({ navigation }) => {
     })
   }
 
-  const renderRightActions = (index) => (
-    <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarLevantamiento(index)}>
-      <Text style={styles.deleteButtonText}>Eliminar</Text>
-    </TouchableOpacity>
-  )
+  const handleLongPress = (item, index) => {
+    Alert.alert(
+      'Eliminar',
+      '¿Estás seguro de que deseas eliminar este elemento?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'Eliminar',
+          onPress: () => eliminarLevantamiento(index)
+        }
+      ]
+    )
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GlobalContainer style={{ flex: 1 }}>
         <ScrollView style={styles.containerPercentage}>
-          {saved1RMs.length > 0 ? (
-            saved1RMs.map((item, index) => (
-              <Swipeable
-                key={index}
-                renderRightActions={() => renderRightActions(index)}
-                overshootRight={false}
-                rightThreshold={80} // Ajustar para permitir suficiente espacio para el botón
-                containerStyle={styles.swipeableContainer}
-              >
-                <TouchableOpacity
-                  style={styles.saved1RMBox}
-                  onPress={() => handlePress(item)}
-                  activeOpacity={1}
-                >
-                  <View style={styles.headerRow}>
-                    <Text style={styles.exerciseName}>{item.exercise}</Text>
-                    <Text style={styles.dateText}>
-                      {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
-                    </Text>
-                  </View>
+          {saved1RMs.length > 0
+            ? (
+                saved1RMs.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.saved1RMBox}
+                    onPress={() => handlePress(item)}
+                    onLongPress={() => handleLongPress(item, index)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.headerRow}>
+                      <Text style={styles.exerciseName}>{item.exercise}</Text>
+                      <Text style={styles.dateText}>
+                    {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
+                  </Text>
+                    </View>
 
-                  <View style={styles.mainRow}>
-                    <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
+                    <View style={styles.mainRow}>
+                      <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
 
-                    <View style={styles.detailsColumn}>
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Kilos</Text>
-                        <Text style={styles.detailValue}>{item.kg}</Text>
-                      </View>
+                      <View style={styles.detailsColumn}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Kilos</Text>
+                      <Text style={styles.detailValue}>{item.kg}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Series</Text>
-                        <Text style={styles.detailValue}>{item.series}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Series</Text>
+                      <Text style={styles.detailValue}>{item.series}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Reps</Text>
-                        <Text style={styles.detailValue}>{item.reps}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Reps</Text>
+                      <Text style={styles.detailValue}>{item.reps}</Text>
+                    </View>
 
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Rpe</Text>
-                        <Text style={styles.detailValue}>{item.rpe}</Text>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Rpe</Text>
+                      <Text style={styles.detailValue}>{item.rpe}</Text>
                     </View>
                   </View>
-                </TouchableOpacity>
-              </Swipeable>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>No hay datos guardados.</Text>
-          )}
+                    </View>
+                  </TouchableOpacity>
+                ))
+              )
+            : (
+              <Text style={styles.noDataText}>No hay datos guardados.</Text>
+              )}
         </ScrollView>
       </GlobalContainer>
     </GestureHandlerRootView>
-  )
-}
-
-const screenWidth = Dimensions.get('window').width
-
-export const FullChartScreen = () => {
-  const data = {
-    labels: ['10/01', '10/05', '10/10', '10/15', '10/20', '10/25'],
-    datasets: [
-      {
-        data: [220, 250, 270, 230, 290, 300],
-        color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`
-      }
-    ]
-  }
-
-  return (
-    <View>
-      <LineChart
-        data={data}
-        width={screenWidth}
-        height={300}
-        chartConfig={{
-          backgroundColor: '#0D1520',
-          backgroundGradientFrom: '#1E2923',
-          backgroundGradientTo: '#08130D',
-          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`
-        }}
-        bezier
-      />
-    </View>
   )
 }
 

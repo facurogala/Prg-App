@@ -367,7 +367,7 @@ export const styles = StyleSheet.create({
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',
-    padding: 1,
+    height: 80,
     borderRadius: 5,
     marginBottom: 15
   },
@@ -397,11 +397,15 @@ export const styles = StyleSheet.create({
   oneRMText: {
     fontSize: 30,
     color: '#fff', // Color blanco para el 1RM
-    marginHorizontal: 20
+    marginHorizontal: 12,
+    marginVertical: 5,
+    marginTop: -12
   },
   detailsColumn: {
     flexDirection: 'row',
-    width: '100%'
+    width: '100%',
+    marginTop: -15
+
 
   },
   detailItem: {
@@ -410,7 +414,7 @@ export const styles = StyleSheet.create({
     paddingHorizontal: -10
   },
   detailText: {
-    fontSize: 12,
+    fontSize: 12, // Tamaño de la fuente para los detalles (Kg, Series, Reps, Rpe)2,
     color: '#9E9E9E', // Color gris para los labels (Kg, Series, Reps, Rpe)
     textAlign: 'center'
 
@@ -523,7 +527,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: 85,
-    height: '84%',
+    height: 80,
     backgroundColor: 'red',
     borderRadius: 5
   },
