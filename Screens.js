@@ -1,5 +1,5 @@
 // HomeScreen.js
-import React, { useState, useEffect, useContext, useMemo } from 'react'
+import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react'
 import {
   Text,
   View,
@@ -12,7 +12,7 @@ import {
   Dimensions,
   Alert
 } from 'react-native'
-import { GestureHandlerRootView, Swipeable } from 'react-native-gesture-handler'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { styles } from './Styles'
 import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -22,7 +22,6 @@ import { LineChart } from 'react-native-chart-kit'
 import { Picker } from '@react-native-picker/picker'
 import moment from 'moment'
 import { useFocusEffect } from '@react-navigation/native'
-import { useCallback } from 'react'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -32,7 +31,6 @@ export const HomeScreen = ({ navigation }) => {
   const [kg, setKg] = useState('')
   const [reps, setReps] = useState('')
   const [date] = useState(new Date())
-  const [] = useState(false)
   const [estimations, setEstimations] = useState(
     Array.from({ length: 20 }, (_, i) => ({ reps: i + 1, weight: '' }))
   )
@@ -191,8 +189,6 @@ export const ChartScreen = () => {
   const [chartData, setChartData] = useState([])
   const [filteredData, setFilteredData] = useState([])
   const [selectedRange, setSelectedRange] = useState('currentMonth')
-  const [showDetailedChart, setShowDetailedChart] = useState(false)
-  const [detailedData, setDetailedData] = useState([])
 
   const fetchData = async () => {
     try {
@@ -342,19 +338,6 @@ export const ChartScreen = () => {
     return null
   }
 
-  // Datos detallados para el gráfico de 1RM diarios de la semana seleccionada
-  const detailedChartData = {
-    labels: detailedData.map(record =>
-      moment(record.date).format('M/D')
-    ),
-    datasets: [
-      {
-        data: detailedData.map(record => parseFloat(record.oneRM)),
-        strokeWidth: 2
-      }
-    ]
-  }
-
   return (
     <View style={styles.containerChart}>
       <Text style={styles.title}>1RM Chart</Text>
@@ -373,9 +356,9 @@ export const ChartScreen = () => {
         <Picker.Item label='Último Año' value='lastYear' />
       </Picker>
 
-      {filteredData.length > 0 ? (
-        <TouchableOpacity>
-          {filteredData.length > 0 ? (
+      {filteredData.length > 0
+        ? (
+          <TouchableOpacity>
             <LineChart
               data={dataForChart}
               width={Dimensions.get('window').width - 32}
@@ -403,19 +386,14 @@ export const ChartScreen = () => {
               style={{
                 marginVertical: 8,
                 borderRadius: 16
-
               }}
-              // Renderiza las etiquetas de los puntos sobre el gráfico
               renderDataPointLabel={renderDataPointLabel}
             />
-          ) : (
-            <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
+          </TouchableOpacity>
+          )
+        : (
+          <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
           )}
-        </TouchableOpacity>
-      ) : (
-        // Aquí iría el gráfico detallado, si lo necesitas
-        <Text>Gráfico detallado aquí</Text>
-      )}
     </View>
   )
 }
@@ -494,34 +472,34 @@ export const PercentageScreen = ({ navigation }) => {
                     <View style={styles.headerRow}>
                       <Text style={styles.exerciseName}>{item.exercise}</Text>
                       <Text style={styles.dateText}>
-                    {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
-                  </Text>
+                        {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
+                      </Text>
                     </View>
 
                     <View style={styles.mainRow}>
                       <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
 
                       <View style={styles.detailsColumn}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Kilos</Text>
-                      <Text style={styles.detailValue}>{item.kg}</Text>
-                    </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Kilos</Text>
+                          <Text style={styles.detailValue}>{item.kg}</Text>
+                        </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Series</Text>
-                      <Text style={styles.detailValue}>{item.series}</Text>
-                    </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Series</Text>
+                          <Text style={styles.detailValue}>{item.series}</Text>
+                        </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Reps</Text>
-                      <Text style={styles.detailValue}>{item.reps}</Text>
-                    </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Reps</Text>
+                          <Text style={styles.detailValue}>{item.reps}</Text>
+                        </View>
 
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Rpe</Text>
-                      <Text style={styles.detailValue}>{item.rpe}</Text>
-                    </View>
-                  </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Rpe</Text>
+                          <Text style={styles.detailValue}>{item.rpe}</Text>
+                        </View>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ))
