@@ -18,7 +18,7 @@ import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlobalContainer from './GlobalContainer'
 import SettingIcon from './assets/Setting.svg'
-import { LineChart } from 'react-native-chart-kit'
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryLabel } from 'victory-native'
 import { Picker } from '@react-native-picker/picker'
 import moment from 'moment'
 import { useFocusEffect } from '@react-navigation/native'
@@ -194,13 +194,11 @@ export const ChartScreen = () => {
     try {
       const savedData = await AsyncStorage.getItem('@saved1RMs')
       const parsedData = savedData ? JSON.parse(savedData) : []
-
       const validData = parsedData.filter(item =>
         item && !isNaN(parseFloat(item.oneRM)) && item.date
       )
-
       setChartData(validData)
-      filterData(validData, 'currentMonth') // Filtro inicial para el mes actual
+      filterData(validData, 'currentMonth')
     } catch (error) {
       console.error('Error al recuperar los datos', error)
     }
@@ -228,27 +226,22 @@ export const ChartScreen = () => {
         startDate = today.clone().startOf('month')
     }
 
-    // Filtra los datos en el rango seleccionado
     const filtered = data.filter(record => {
       const recordDate = moment(record.date)
       return recordDate.isSameOrAfter(startDate) && recordDate.isSameOrBefore(today)
     })
 
-    // Ordena los datos de más antiguo a más reciente
     const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
 
     if (range === 'lastYear') {
-      // Agrupar por mes si el rango es "Último Año"
       const groupedByMonth = groupByMonth(sortedData)
       setFilteredData(groupedByMonth)
     } else {
-      // Agrupar por semana para otros rangos
       const groupedByWeek = groupByWeek(sortedData)
       setFilteredData(groupedByWeek)
     }
   }, [])
 
-  // Agrupar datos por semana
   const groupByWeek = (data) => {
     const grouped = {}
     data.forEach(item => {
@@ -259,24 +252,13 @@ export const ChartScreen = () => {
       grouped[weekNumber].push(item)
     })
 
-    // Obtener el 1RM más alto de cada semana
     return Object.values(grouped).map(weekData => {
       const maxOneRM = Math.max(...weekData.map(item => parseFloat(item.oneRM)))
-
-      // Calcular el número de la semana dentro del mes
-      const weekOfMonth = Math.min(moment(weekData[0].date).week() - moment(weekData[0].date).startOf('month').week() + 1, 4)
-      // Formato deseado MM-WN
-      const week = moment(weekData[0].date).format('MM') + `-W${weekOfMonth}`
-
-      return {
-        week,
-        maxOneRM,
-        dailyData: weekData // Guardamos los datos diarios de cada semana
-      }
+      const week = moment(weekData[0].date).format('MM') + `-W${weekData.length}`
+      return { x: week, y: maxOneRM }
     })
   }
 
-  // Agrupar datos por mes
   const groupByMonth = (data) => {
     const grouped = {}
     data.forEach(item => {
@@ -287,19 +269,11 @@ export const ChartScreen = () => {
       grouped[month].push(item)
     })
 
-    // Obtener el 1RM más alto de cada mes
     return Object.values(grouped).map(monthData => {
       const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
-
-      return {
-        month: moment(monthData[0].date).format('MMM YY'),
-        maxOneRM,
-        dailyData: monthData // Guardamos los datos diarios de cada mes
-      }
+      return { x: moment(monthData[0].date).format('MMM YY'), y: maxOneRM }
     })
   }
-
-  // Función para mostrar los datos detallados diarios de una semana
 
   useFocusEffect(
     useCallback(() => {
@@ -307,40 +281,11 @@ export const ChartScreen = () => {
     }, [])
   )
 
-  const weeklyData = filteredData.map(record => parseFloat(record.maxOneRM))
-  const weeklyLabels = filteredData.map(record => record.week || record.month)
-
-  const dataForChart = useMemo(() => ({
-    labels: weeklyLabels.length > 0 ? weeklyLabels : ['No Data'],
-    datasets: [{
-      data: weeklyData.length > 0 ? weeklyData : [0],
-      strokeWidth: 2
-    }]
-  }), [weeklyLabels, weeklyData])
-
-  const renderDataPointLabel = (index) => {
-    if (weeklyData[index]) {
-      return (
-        <Text
-          style={{
-            color: 'white',
-            fontSize: 12,
-            textAlign: 'center',
-            position: 'absolute',
-            top: -20,
-            pointerEvents: 'none'
-          }}
-        >
-          {weeklyData[index]}
-        </Text>
-      )
-    }
-    return null
-  }
+  const dataForChart = useMemo(() => filteredData, [filteredData])
 
   return (
-    <View style={styles.containerChart}>
-      <Text style={styles.title}>1RM Chart</Text>
+    <View style={{ flex: 1, padding: 20 }}>
+      <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>1RM Chart</Text>
       <Picker
         selectedValue={selectedRange}
         style={{ height: 50, width: 200 }}
@@ -356,43 +301,36 @@ export const ChartScreen = () => {
         <Picker.Item label='Último Año' value='lastYear' />
       </Picker>
 
-      {filteredData.length > 0
+      {dataForChart.length > 0
         ? (
-          <TouchableOpacity>
-            <LineChart
-              data={dataForChart}
-              width={Dimensions.get('window').width - 32}
-              height={300}
-              chartConfig={{
-                backgroundColor: '#0D1520',
-                backgroundGradientFrom: '#212836',
-                backgroundGradientTo: '#0D1520',
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 16
-                },
-                propsForDots: {
-                  r: '6',
-                  strokeWidth: '2',
-                  stroke: '#D9E92C'
-                },
-                propsForLabels: {
-                  fontSize: 12
-                }
-              }}
-              bezier
+          <VictoryChart width={Dimensions.get('window').width - 32}>
+            <VictoryAxis
+              label='Fecha'
               style={{
-                marginVertical: 8,
-                borderRadius: 16
+                axisLabel: { padding: 30 },
+                tickLabels: { angle: -45, fontSize: 10 }
               }}
-              renderDataPointLabel={renderDataPointLabel}
             />
-          </TouchableOpacity>
+            <VictoryAxis
+              dependentAxis
+              label='Kg'
+              style={{
+                axisLabel: { padding: 40 },
+                tickLabels: { fontSize: 10 }
+              }}
+            />
+            <VictoryLine
+              data={dataForChart}
+              style={{
+                data: { stroke: '#D9E92C', strokeWidth: 2 }
+              }}
+              labels={({ datum }) => datum.y}
+              labelComponent={<VictoryLabel dy={-20} style={{ fill: 'white' }} />}
+            />
+          </VictoryChart>
           )
         : (
-          <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
+          <Text style={{ textAlign: 'center', marginTop: 20 }}>No hay datos disponibles para este rango</Text>
           )}
     </View>
   )

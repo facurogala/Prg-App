@@ -19,7 +19,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
     if (route.params) {
       const { note: incomingNote, exercise: incomingExercise, rpe: incomingRpe } = route.params
       setNote(incomingNote || '')
- setExercise(incomingExercise || 'Elegir')
+      setExercise(incomingExercise || 'Elegir')
       setRpe(incomingRpe || null)
       setSelectedDate(date ? new Date(date) : new Date())
     }
@@ -59,7 +59,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 
       await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData))
       setSaved1RMs(updatedData)
-      navigation.navigate('PercentageTab', { note: note })
+      navigation.navigate('PercentageTab', { note })
     } catch (error) {
       console.error('Error al guardar el levantamiento', error)
     }
@@ -280,7 +280,7 @@ const pickerSelectDarkStyles = {
     backgroundColor: '#212836'
   },
   modalViewBottom: {
-    backgroundColor: '#0D1520', // Fondo oscuro para el popup
+    backgroundColor: '#0D1520' // Fondo oscuro para el popup
   }
 }
 

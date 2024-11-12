@@ -358,12 +358,12 @@ export const styles = StyleSheet.create({
     marginHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: '100%',
+    width: '100%'
   },
   containerPercentage: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height,
+    height
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',
@@ -405,7 +405,6 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     marginTop: -15
-
 
   },
   detailItem: {
@@ -507,21 +506,15 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center'
   },
-  noDataText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#999',
-  },
   swipeableContainer: {
-    overflow: 'hidden', // Evita el fade al deslizar
+    overflow: 'hidden' // Evita el fade al deslizar
   },
   deleteButtonContainer: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 80, // Asegúrate de que el ancho sea constante
     height: '100%',
-    backgroundColor: 'red', // Asegura que el fondo del botón sea visible
+    backgroundColor: 'red' // Asegura que el fondo del botón sea visible
   },
   deleteButton: {
     justifyContent: 'center',
@@ -535,5 +528,5 @@ export const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16
-  },
+  }
 })
