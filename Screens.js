@@ -18,10 +18,10 @@ import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import GlobalContainer from './GlobalContainer'
 import SettingIcon from './assets/Setting.svg'
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryLabel } from 'victory-native'
 import { Picker } from '@react-native-picker/picker'
 import moment from 'moment'
 import { useFocusEffect } from '@react-navigation/native'
+import Svg, { Path, Defs, LinearGradient, Stop, Text as SvgText, Circle } from 'react-native-svg'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -185,6 +185,11 @@ export const SettingsScreen = () => {
   )
 }
 
+const BOX_WIDTH = Dimensions.get('window').width * 0.9
+const BOX_HEIGHT = 200
+const PADDING_X = 50
+const PADDING_Y = 30
+
 export const ChartScreen = () => {
   const [chartData, setChartData] = useState([])
   const [filteredData, setFilteredData] = useState([])
@@ -194,14 +199,38 @@ export const ChartScreen = () => {
     try {
       const savedData = await AsyncStorage.getItem('@saved1RMs')
       const parsedData = savedData ? JSON.parse(savedData) : []
+
       const validData = parsedData.filter(item =>
         item && !isNaN(parseFloat(item.oneRM)) && item.date
       )
+
       setChartData(validData)
       filterData(validData, 'currentMonth')
     } catch (error) {
       console.error('Error al recuperar los datos', error)
     }
+  }
+
+  const groupByMonth = (data) => {
+    const grouped = {}
+    data.forEach(item => {
+      const month = moment(item.date).format('YYYY-MM')
+      if (!grouped[month]) {
+        grouped[month] = []
+      }
+      grouped[month].push(item)
+    })
+    // Convierte los grupos en un array y ordena por fecha
+    return Object.keys(grouped)
+      .sort() // Asegura el orden cronológico
+      .map(month => {
+        const monthData = grouped[month]
+        const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
+        return {
+          month: moment(monthData[0].date).format('MMM YY'),
+          maxOneRM
+        }
+      })
   }
 
   const filterData = useCallback((data, range) => {
@@ -231,49 +260,20 @@ export const ChartScreen = () => {
       return recordDate.isSameOrAfter(startDate) && recordDate.isSameOrBefore(today)
     })
 
-    const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
-
+    // Agrupar por mes si el rango es "Último Año"
     if (range === 'lastYear') {
-      const groupedByMonth = groupByMonth(sortedData)
+      const groupedByMonth = groupByMonth(filtered)
       setFilteredData(groupedByMonth)
     } else {
-      const groupedByWeek = groupByWeek(sortedData)
-      setFilteredData(groupedByWeek)
+      // Si no es anual, agrupar por semana o día según prefieras
+      const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
+      const groupedData = sortedData.map(item => ({
+        date: moment(item.date).format('DD/MM').toString(),
+        maxOneRM: parseFloat(item.oneRM)
+      }))
+      setFilteredData(groupedData)
     }
   }, [])
-
-  const groupByWeek = (data) => {
-    const grouped = {}
-    data.forEach(item => {
-      const weekNumber = moment(item.date).week()
-      if (!grouped[weekNumber]) {
-        grouped[weekNumber] = []
-      }
-      grouped[weekNumber].push(item)
-    })
-
-    return Object.values(grouped).map(weekData => {
-      const maxOneRM = Math.max(...weekData.map(item => parseFloat(item.oneRM)))
-      const week = moment(weekData[0].date).format('MM') + `-W${weekData.length}`
-      return { x: week, y: maxOneRM }
-    })
-  }
-
-  const groupByMonth = (data) => {
-    const grouped = {}
-    data.forEach(item => {
-      const month = moment(item.date).format('YYYY-MM')
-      if (!grouped[month]) {
-        grouped[month] = []
-      }
-      grouped[month].push(item)
-    })
-
-    return Object.values(grouped).map(monthData => {
-      const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
-      return { x: moment(monthData[0].date).format('MMM YY'), y: maxOneRM }
-    })
-  }
 
   useFocusEffect(
     useCallback(() => {
@@ -281,14 +281,33 @@ export const ChartScreen = () => {
     }, [])
   )
 
-  const dataForChart = useMemo(() => filteredData, [filteredData])
+  const weeklyData = filteredData.map(record => record.maxOneRM)
+  const weeklyLabels = filteredData.map(record => record.month || record.date) // Ajusta etiquetas según el filtro
+
+  const maxY = Math.ceil(Math.max(...weeklyData) * 1 / 100) * 100 || 400
+  const scaleY = (value) => BOX_HEIGHT - ((value / maxY) * (BOX_HEIGHT - PADDING_Y * 2)) - PADDING_Y
+  const scaleX = (index) => (BOX_WIDTH - PADDING_X * 2) / (weeklyData.length - 1) * index + PADDING_X
+
+  const linePath = weeklyData.reduce((acc, point, index) => {
+    const x = scaleX(index)
+    const y = scaleY(point)
+    if (index === 0) {
+      return `M ${x},${y}`
+    }
+    const prevX = scaleX(index - 1)
+    const prevY = scaleY(weeklyData[index - 1])
+    const controlX = (prevX + x) / 2
+    const controlY1 = prevY
+    const controlY2 = y
+    return `${acc} C ${controlX},${controlY1} ${controlX},${controlY2} ${x},${y}`
+  }, '')
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>1RM Chart</Text>
+    <View style={styles.containerChart}>
+      <Text style={styles.title}>1RM Chart</Text>
       <Picker
         selectedValue={selectedRange}
-        style={{ height: 50, width: 200 }}
+        style={{ height: 50, width: 200, backgroundColor: '#212836' }}
         onValueChange={(itemValue) => {
           setSelectedRange(itemValue)
           filterData(chartData, itemValue)
@@ -301,36 +320,95 @@ export const ChartScreen = () => {
         <Picker.Item label='Último Año' value='lastYear' />
       </Picker>
 
-      {dataForChart.length > 0
+      {filteredData.length > 0
         ? (
-          <VictoryChart width={Dimensions.get('window').width - 32}>
-            <VictoryAxis
-              label='Fecha'
-              style={{
-                axisLabel: { padding: 30 },
-                tickLabels: { angle: -45, fontSize: 10 }
-              }}
+          <Svg width={BOX_WIDTH} height={BOX_HEIGHT + PADDING_Y * 2}>
+            <Defs>
+              <LinearGradient id='grad' x1='0' y1='0' x2='0' y2='1'>
+                <Stop offset='0%' stopColor='#D9E92C' stopOpacity='0.3' />
+                <Stop offset='100%' stopColor='#060B11' stopOpacity='0' />
+              </LinearGradient>
+            </Defs>
+
+            {/* Área sombreada bajo la línea */}
+            <Path
+              d={`${linePath} L ${BOX_WIDTH - PADDING_X} ${BOX_HEIGHT - PADDING_Y} L ${PADDING_X} ${BOX_HEIGHT - PADDING_Y} Z`}
+              fill='url(#grad)'
             />
-            <VictoryAxis
-              dependentAxis
-              label='Kg'
-              style={{
-                axisLabel: { padding: 40 },
-                tickLabels: { fontSize: 10 }
-              }}
+
+            {/* Línea de datos suavizada */}
+            <Path
+              d={linePath}
+              fill='none'
+              stroke='#D9E92C'
+              strokeWidth='3'
             />
-            <VictoryLine
-              data={dataForChart}
-              style={{
-                data: { stroke: '#D9E92C', strokeWidth: 2 }
-              }}
-              labels={({ datum }) => datum.y}
-              labelComponent={<VictoryLabel dy={-20} style={{ fill: 'white' }} />}
-            />
-          </VictoryChart>
+
+            {/* Puntos de datos y etiquetas de 1RM */}
+            {weeklyData.map((point, index) => {
+              const x = scaleX(index)
+              const y = scaleY(point)
+              const offsetY = index % 2 === 0 ? -10 : 20 // Alterna posición: encima o debajo
+              return (
+                <React.Fragment key={`point-${index}`}>
+                  {/* Etiqueta con el valor del 1RM, alternando su posición */}
+                  <SvgText
+                    x={x}
+                    y={y + offsetY} // Alterna posición según el índice
+                    fontSize='10'
+                    fill='white'
+                    textAnchor='middle'
+                  >
+                    {point} kg
+                  </SvgText>
+
+                  {/* Punto de datos */}
+                  <Circle
+                    cx={x}
+                    cy={y}
+                    r='4'
+                    fill='#D9E92C'
+                  />
+                </React.Fragment>
+              )
+            })}
+
+            {/* Etiquetas del eje X con fechas */}
+            {weeklyLabels.map((label, index) => (
+              <SvgText
+                key={`x-label-${index}`}
+                x={scaleX(index)}
+                y={BOX_HEIGHT + PADDING_Y + 15}
+                fontSize='10'
+                fill='white'
+                textAnchor='middle'
+                rotation='45'
+                origin={`${scaleX(index)}, ${BOX_HEIGHT + PADDING_Y + 15}`}
+              >
+                {label}
+              </SvgText>
+            ))}
+
+            {/* Etiquetas del eje Y */}
+            {[...Array(5)].map((_, i) => {
+              const y = ((BOX_HEIGHT - PADDING_Y * 2) / 4) * i + PADDING_Y
+              const label = Math.round(maxY - ((maxY / 4) * i))
+              return (
+                <SvgText
+                  key={`y-label-${i}`}
+                  x='5'
+                  y={y + 12}
+                  fontSize='10'
+                  fill='white'
+                >
+                  {label} kg
+                </SvgText>
+              )
+            })}
+          </Svg>
           )
         : (
-          <Text style={{ textAlign: 'center', marginTop: 20 }}>No hay datos disponibles para este rango</Text>
+          <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
           )}
     </View>
   )
@@ -376,7 +454,7 @@ export const PercentageScreen = ({ navigation }) => {
     })
   }
 
-  const handleLongPress = (item, index) => {
+  const handleLongPress = (_item, index) => {
     Alert.alert(
       'Eliminar',
       '¿Estás seguro de que deseas eliminar este elemento?',
