@@ -22,7 +22,7 @@ const tab = createBottomTabNavigator();
 export default function MainContainer() {
     return (
         <NavigationContainer>
-            <Tab.Navigator
+            <tab.Navigator
             initialRouteName={homeName}
             screenOptions={({route})  => ({
             tabBarIcon: ({focused, color, size}) => {
@@ -31,20 +31,20 @@ export default function MainContainer() {
 
                 if (rn == homeName) {
                     iconName = focused ? "home" : "home-outline"
-                } else if (rn === ChartName) {
+                } else if (rn === chartName) {
                     iconName = focused ? "list" : "home-outline"
-                } else if (rn === ProgfileName) {
+                } else if (rn === profileName) {
                     iconName = focused ? "profile" : "home-outline"
 
-                    return <Iconicons name ={iconName} size={size} color={color}/>
+                    return <Ionicons name ={iconName} size={size} color={color}/>
         
             },
             })}>
 
-            <Tab.Screen name={homeName} component={HomeScreen}/>
+            <tab.Screen name={homeName} component={HomeScreen}/>
                 
                 
-             </Tab.Navigator>
+             </tab.Navigator>
 
         </NavigationContainer>
 

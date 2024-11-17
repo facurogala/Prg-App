@@ -1,5 +1,5 @@
 // HomeScreen.js
-import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react'
 import {
   Text,
   View,
@@ -10,18 +10,20 @@ import {
   BackHandler,
   ScrollView,
   Dimensions,
+  Pressable,
+  TouchableWithoutFeedback,
+  Keyboard,
   Alert
 } from 'react-native'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { styles } from './Styles'
 import { GlobalContext } from './GlobalContext'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import GlobalContainer from './GlobalContainer'
 import SettingIcon from './assets/Setting.svg'
 import { Picker } from '@react-native-picker/picker'
 import moment from 'moment'
 import { useFocusEffect } from '@react-navigation/native'
 import Svg, { Path, Defs, LinearGradient, Stop, Text as SvgText, Circle } from 'react-native-svg'
+import RNPickerSelect from 'react-native-picker-select'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -220,9 +222,8 @@ export const ChartScreen = () => {
       }
       grouped[month].push(item)
     })
-    // Convierte los grupos en un array y ordena por fecha
     return Object.keys(grouped)
-      .sort() // Asegura el orden cronológico
+      .sort()
       .map(month => {
         const monthData = grouped[month]
         const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
@@ -260,12 +261,10 @@ export const ChartScreen = () => {
       return recordDate.isSameOrAfter(startDate) && recordDate.isSameOrBefore(today)
     })
 
-    // Agrupar por mes si el rango es "Último Año"
     if (range === 'lastYear') {
       const groupedByMonth = groupByMonth(filtered)
       setFilteredData(groupedByMonth)
     } else {
-      // Si no es anual, agrupar por semana o día según prefieras
       const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
       const groupedData = sortedData.map(item => ({
         date: moment(item.date).format('DD/MM').toString(),
@@ -281,12 +280,25 @@ export const ChartScreen = () => {
     }, [])
   )
 
-  const weeklyData = filteredData.map(record => record.maxOneRM)
-  const weeklyLabels = filteredData.map(record => record.month || record.date) // Ajusta etiquetas según el filtro
+  const weeklyData = filteredData
+    .map(record => record.maxOneRM)
+    .filter(point => !isNaN(point)) // Filtrar valores NaN
+  const weeklyLabels = filteredData
+    .map(record => record.month || record.date)
+    .filter((_, index) => !isNaN(weeklyData[index])) // Filtrar etiquetas correspondientes
 
   const maxY = Math.ceil(Math.max(...weeklyData) * 1 / 100) * 100 || 400
-  const scaleY = (value) => BOX_HEIGHT - ((value / maxY) * (BOX_HEIGHT - PADDING_Y * 2)) - PADDING_Y
-  const scaleX = (index) => (BOX_WIDTH - PADDING_X * 2) / (weeklyData.length - 1) * index + PADDING_X
+
+  const scaleY = (value) => {
+    return !isNaN(value)
+      ? BOX_HEIGHT - ((value / maxY) * (BOX_HEIGHT - PADDING_Y * 2)) - PADDING_Y
+      : 0 // Predeterminado a 0 si el valor es NaN
+  }
+  const scaleX = (index) => {
+    return weeklyData.length > 1
+      ? (BOX_WIDTH - PADDING_X * 2) / (weeklyData.length - 1) * index + PADDING_X
+      : PADDING_X
+  }
 
   const linePath = weeklyData.reduce((acc, point, index) => {
     const x = scaleX(index)
@@ -348,21 +360,18 @@ export const ChartScreen = () => {
             {weeklyData.map((point, index) => {
               const x = scaleX(index)
               const y = scaleY(point)
-              const offsetY = index % 2 === 0 ? -10 : 20 // Alterna posición: encima o debajo
+              const offsetY = index % 2 === 0 ? -10 : 20
               return (
                 <React.Fragment key={`point-${index}`}>
-                  {/* Etiqueta con el valor del 1RM, alternando su posición */}
                   <SvgText
                     x={x}
-                    y={y + offsetY} // Alterna posición según el índice
+                    y={y + offsetY}
                     fontSize='10'
                     fill='white'
                     textAnchor='middle'
                   >
                     {point} kg
                   </SvgText>
-
-                  {/* Punto de datos */}
                   <Circle
                     cx={x}
                     cy={y}
@@ -415,118 +424,233 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = ({ navigation }) => {
-  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
+  const [filter, setFilter] = useState({ exercise: 'Todos', sortBy: 'Fecha (más reciente)' });
+  const [visibleFilter, setVisibleFilter] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
+  const filterRefs = useRef({});
 
   useEffect(() => {
     const cargarLevantamientos = async () => {
       try {
-        const levantamientosGuardados = await AsyncStorage.getItem('@saved1RMs')
-        const parsedData = levantamientosGuardados ? JSON.parse(levantamientosGuardados) : []
-        setSaved1RMs(parsedData)
+        const data = await AsyncStorage.getItem('@saved1RMs');
+        const parsedData = data ? JSON.parse(data) : [];
+        setSaved1RMs(parsedData);
       } catch (error) {
-        console.error('Error al cargar levantamientos', error)
+        console.error('Error al cargar levantamientos', error);
       }
-    }
-    cargarLevantamientos()
-  }, [])
+    };
+    cargarLevantamientos();
+  }, []);
 
-  const eliminarLevantamiento = async (index) => {
+  const toggleFilterMenu = (menu, refKey) => {
+    if (visibleFilter === menu) {
+      setVisibleFilter(null);
+      return;
+    }
+
+    filterRefs.current[refKey].measure((x, y, width, height, pageX, pageY) => {
+      setMenuPosition({ top: pageY + height - 5, left: pageX, width });
+      setVisibleFilter(menu);
+    });
+  };
+
+  const getFilteredData = () => {
+    let data = [...saved1RMs];
+    if (filter.exercise !== 'Todos') {
+      data = data.filter((item) => item.exercise === filter.exercise);
+    }
+    if (filter.sortBy === 'Fecha (más reciente)') {
+      data.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (filter.sortBy === 'Fecha (más antigua)') {
+      data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (filter.sortBy === 'Peso (más pesado)') {
+      data.sort((a, b) => b.oneRM - a.oneRM);
+    } else if (filter.sortBy === 'Peso (más liviano)') {
+      data.sort((a, b) => a.oneRM - b.oneRM);
+    }
+    return data;
+  };
+
+  const handleFilterChange = (type, value) => {
+    setFilter((prev) => ({ ...prev, [type]: value }));
+    setVisibleFilter(null);
+  };
+
+  const eliminarLevantamiento = async (id) => {
     try {
-      const nuevosLevantamientos = saved1RMs.filter((_, i) => i !== index)
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos))
-      setSaved1RMs(nuevosLevantamientos)
+      const nuevosLevantamientos = saved1RMs.filter((item) => item.id !== id);
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
+      setSaved1RMs(nuevosLevantamientos);
+      console.log(`Levantamiento con ID ${id} eliminado correctamente.`);
     } catch (error) {
-      console.error('Error al eliminar el levantamiento', error)
+      console.error('Error al eliminar el levantamiento', error);
     }
-  }
+  };
 
-  const handlePress = (item) => {
-    navigation.navigate('SaveDetails', {
-      id: item.id,
-      exercise: item.exercise,
-      kg: item.kg,
-      reps: item.reps,
-      oneRM: item.oneRM,
-      date: item.date,
-      series: item.series,
-      rpe: item.rpe,
-      note: item.note
-    })
-  }
-
-  const handleLongPress = (_item, index) => {
+  const confirmarEliminacion = (id) => {
     Alert.alert(
-      'Eliminar',
-      '¿Estás seguro de que deseas eliminar este elemento?',
+      'Eliminar Levantamiento',
+      '¿Estás seguro de que deseas eliminar este levantamiento?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel'
-        },
-        {
-          text: 'Eliminar',
-          onPress: () => eliminarLevantamiento(index)
-        }
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', onPress: () => eliminarLevantamiento(id) },
       ]
-    )
-  }
+    );
+  };
+
+  const filteredData = getFilteredData();
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <GlobalContainer style={{ flex: 1 }}>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        if (visibleFilter) {
+          setVisibleFilter(null);
+          Keyboard.dismiss();
+        }
+      }}
+    >
+      <View style={{ flex: 1, backgroundColor: '#0D1520' }}>
+        <View style={styles.filtersContainer}>
+          {/* Botón para Filtrar por Ejercicio */}
+          <TouchableOpacity
+            ref={(ref) => (filterRefs.current.exercise = ref)}
+            style={styles.filterButton}
+            onPress={() => toggleFilterMenu('exercise', 'exercise')}
+          >
+            <Text style={styles.filterButtonText}>
+              Filtrar por Ejercicio: {filter.exercise}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Botón para Ordenar */}
+          <TouchableOpacity
+            ref={(ref) => (filterRefs.current.sortBy = ref)}
+            style={styles.filterButton}
+            onPress={() => toggleFilterMenu('sortBy', 'sortBy')}
+          >
+            <Text style={styles.filterButtonText}>
+              Ordenar por: {filter.sortBy}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Menú de Opciones para Filtrar por Ejercicio */}
+        {visibleFilter === 'exercise' && (
+          <View
+            style={[
+              styles.menuContainer,
+              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width },
+            ]}
+          >
+            <Pressable
+              onPress={() => handleFilterChange('exercise', 'Todos')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Todos</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('exercise', 'Sentadilla')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Sentadilla</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('exercise', 'Peso Muerto')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Peso Muerto</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('exercise', 'Banco Plano')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Banco Plano</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Menú de Opciones para Ordenar */}
+        {visibleFilter === 'sortBy' && (
+          <View
+            style={[
+              styles.menuContainer,
+              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width },
+            ]}
+          >
+            <Pressable
+              onPress={() => handleFilterChange('sortBy', 'Fecha (más reciente)')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Fecha (más reciente)</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('sortBy', 'Fecha (más antigua)')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Fecha (más antigua)</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('sortBy', 'Peso (más pesado)')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Peso (más pesado)</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => handleFilterChange('sortBy', 'Peso (más liviano)')}
+              style={styles.menuItem}
+            >
+              <Text style={styles.menuText}>Peso (más liviano)</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Lista de Resultados Filtrados */}
         <ScrollView style={styles.containerPercentage}>
-          {saved1RMs.length > 0
-            ? (
-                saved1RMs.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.saved1RMBox}
-                    onPress={() => handlePress(item)}
-                    onLongPress={() => handleLongPress(item, index)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.headerRow}>
-                      <Text style={styles.exerciseName}>{item.exercise}</Text>
-                      <Text style={styles.dateText}>
-                        {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
-                      </Text>
+          {filteredData.length > 0 ? (
+            filteredData.map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.saved1RMBox}
+                onPress={() => navigation.navigate('SaveDetails', { ...item })}
+                onLongPress={() => confirmarEliminacion(item.id)}
+              >
+                <View style={styles.headerRow}>
+                  <Text style={styles.exerciseName}>{item.exercise}</Text>
+                  <Text style={styles.dateText}>
+                    {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
+                  </Text>
+                </View>
+                <View style={styles.mainRow}>
+                  <Text style={styles.oneRMText}>{item.oneRM} kg</Text>
+                  <View style={styles.detailsColumn}>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Kilos:</Text>
+                      <Text style={styles.detailValue}>{item.kg}</Text>
                     </View>
-
-                    <View style={styles.mainRow}>
-                      <Text style={styles.oneRMText}>{item.oneRM}kg</Text>
-
-                      <View style={styles.detailsColumn}>
-                        <View style={styles.detailItem}>
-                          <Text style={styles.detailLabel}>Kilos</Text>
-                          <Text style={styles.detailValue}>{item.kg}</Text>
-                        </View>
-
-                        <View style={styles.detailItem}>
-                          <Text style={styles.detailLabel}>Series</Text>
-                          <Text style={styles.detailValue}>{item.series}</Text>
-                        </View>
-
-                        <View style={styles.detailItem}>
-                          <Text style={styles.detailLabel}>Reps</Text>
-                          <Text style={styles.detailValue}>{item.reps}</Text>
-                        </View>
-
-                        <View style={styles.detailItem}>
-                          <Text style={styles.detailLabel}>Rpe</Text>
-                          <Text style={styles.detailValue}>{item.rpe}</Text>
-                        </View>
-                      </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Series:</Text>
+                      <Text style={styles.detailValue}>{item.series || '-'}</Text>
                     </View>
-                  </TouchableOpacity>
-                ))
-              )
-            : (
-              <Text style={styles.noDataText}>No hay datos guardados.</Text>
-              )}
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>Reps:</Text>
+                      <Text style={styles.detailValue}>{item.reps}</Text>
+                    </View>
+                    <View style={styles.detailItem}>
+                      <Text style={styles.detailLabel}>RPE:</Text>
+                      <Text style={styles.detailValue}>{item.rpe || '-'}</Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noDataText}>No hay datos para mostrar con este filtro.</Text>
+          )}
         </ScrollView>
-      </GlobalContainer>
-    </GestureHandlerRootView>
-  )
+      </View>
+    </TouchableWithoutFeedback>
+  );
 }
 
 export const ProfileScreen = () => {

@@ -224,13 +224,6 @@ export const styles = StyleSheet.create({
   Profile: {
     marginHorizontal: 20
   },
-  containerChart: {
-    flex: 1,
-    backgroundColor: '#0D1520', // Cambia el color de fondo a verde
-    justifyContent: 'center', // Opcional, para centrar el contenido verticalmente
-    alignItems: 'center' // Opcional, para centrar el contenido horizontalmente
-  },
-
   containerProfile: {
     flex: 1,
     backgroundColor: '#0D1520', // Cambia el color de fondo a verde
@@ -363,7 +356,7 @@ export const styles = StyleSheet.create({
   containerPercentage: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height
+    height,
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',
@@ -427,12 +420,6 @@ export const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginTop: 10
-  },
-  noDataText: {
-    fontSize: 18,
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 20
   },
   tonnageTitle: {
     fontWeight: 'bold',
@@ -534,5 +521,68 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16
+  },
+  containerChart: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#0A0F16'
+  },
+  title: {
+    fontSize: 24,
+    color: '#D9E92C',
+    textAlign: 'center',
+    marginBottom: 20
+  },
+  chartContainer: {
+    backgroundColor: '#1A2132',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 20
+  },
+  noDataText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center'
+  },
+  menuContainer: {
+    position: 'absolute',
+    backgroundColor: '#FFF',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 10, // Para Android
+    zIndex: 1000, // Para asegurar que esté sobre otros elementos
+    width: 200 // Ancho del menú desplegable
+  },
+  menuItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDD',
+    position: 'relative',
+    paddingVertical: 10
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#000'
+  },
+  filterButtonText: {
+    color: '#FFF',
+    fontSize: 16
+  },
+  filterButton: {
+    padding: 10,
+    backgroundColor: '#313649',
+    borderRadius: 5
+  },
+  filtersContainer: {
+    backgroundColor: '#0D1520', // Fondo igual que la pantalla
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderRadius: 5,
+    borderColor: '#212836',
+    borderWidth: 1,
+    gap: 20,
   }
 })

@@ -4,12 +4,13 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import RNPickerSelect from 'react-native-picker-select'
 import { GlobalContext } from './GlobalContext'
+import { CommonActions } from '@react-navigation/native'
 
 const SaveDetailsScreen = ({ route, navigation }) => {
   const { kg, reps, oneRM, date } = route.params || {}
   const [note, setNote] = useState('')
   const [exercise, setExercise] = useState('Elegir')
-  const [rpe, setRpe] = useState(null) // Estado para el RPE, pero ahora es opcional
+  const [rpe, setRpe] = useState(null)
   const [selectedDate, setSelectedDate] = useState(new Date(date || Date.now()))
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [dateMode, setDateMode] = useState('date')
@@ -32,34 +33,40 @@ const SaveDetailsScreen = ({ route, navigation }) => {
     }
 
     const dataToSave = {
+      id: route.params?.id || Date.now().toString(), // Usa el id si está disponible o genera uno nuevo
       oneRM,
       kg,
       reps,
       note,
       exercise,
-      rpe, // Incluye el valor de RPE si se selecciona, pero no es obligatorio
+      rpe,
       date: selectedDate.toISOString()
     }
 
     try {
       const currentData = await AsyncStorage.getItem('@saved1RMs')
       const parsedData = currentData ? JSON.parse(currentData) : []
-      const existingIndex = parsedData.findIndex(
-        (item) =>
-          item.oneRM === oneRM && item.kg === kg && item.reps === reps && item.date === date
-      )
 
-      let updatedData
+      // Busca el índice del 1RM existente (si existe)
+      const existingIndex = parsedData.findIndex((item) => item.id === dataToSave.id)
+
       if (existingIndex !== -1) {
+        // Modificar el 1RM existente
         parsedData[existingIndex] = dataToSave
-        updatedData = parsedData
       } else {
-        updatedData = [...parsedData, dataToSave]
+        // Agregar un nuevo 1RM
+        parsedData.push(dataToSave)
       }
 
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(updatedData))
-      setSaved1RMs(updatedData)
-      navigation.navigate('PercentageTab', { note })
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(parsedData))
+      setSaved1RMs(parsedData)
+
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'MainTabs',
+          params: { screen: 'PercentageTab' }
+        })
+      )
     } catch (error) {
       console.error('Error al guardar el levantamiento', error)
     }
@@ -74,21 +81,6 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.detailsContainer}>
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Kilogramos</Text>
-          <Text style={styles.summaryValue}>{kg} kg</Text>
-        </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Reps</Text>
-          <Text style={styles.summaryValue}>{reps}</Text>
-        </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>1RM Estimado</Text>
-          <Text style={styles.summaryValue}>{oneRM} kg</Text>
-        </View>
-      </View>
-
       <Text style={styles.label}>Ejercicio Realizado:</Text>
       <RNPickerSelect
         onValueChange={(value) => setExercise(value)}
@@ -98,7 +90,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
           { label: 'Banco Plano', value: 'Banco Plano' }
         ]}
         placeholder={{ label: 'Elige un ejercicio...', value: null }}
-        style={pickerSelectDarkStyles} // Aplicar el estilo oscuro
+        style={pickerSelectDarkStyles}
         value={exercise}
       />
 
@@ -106,7 +98,6 @@ const SaveDetailsScreen = ({ route, navigation }) => {
       <TextInput
         style={styles.textInput}
         placeholder='Escribe un comentario (opcional)'
-        placeholderTextColor='white'
         value={note}
         onChangeText={setNote}
         multiline
@@ -116,20 +107,12 @@ const SaveDetailsScreen = ({ route, navigation }) => {
       <Text style={styles.label}>RPE (Opcional):</Text>
       <RNPickerSelect
         onValueChange={(value) => setRpe(value)}
-        items={[
-          { label: '1', value: 1 },
-          { label: '2', value: 2 },
-          { label: '3', value: 3 },
-          { label: '4', value: 4 },
-          { label: '5', value: 5 },
-          { label: '6', value: 6 },
-          { label: '7', value: 7 },
-          { label: '8', value: 8 },
-          { label: '9', value: 9 },
-          { label: '10', value: 10 }
-        ]}
+        items={Array.from({ length: 10 }, (_, i) => ({
+          label: `${i + 1}`,
+          value: i + 1
+        }))}
         placeholder={{ label: 'Elige un valor de RPE (opcional)...', value: null }}
-        style={pickerSelectDarkStyles} // Aplicar el estilo oscuro
+        style={pickerSelectDarkStyles}
         value={rpe}
       />
 
@@ -176,6 +159,7 @@ const SaveDetailsScreen = ({ route, navigation }) => {
 }
 
 const styles = StyleSheet.create({
+  // Estilos existentes
   detailsContainer: {
     backgroundColor: '#0D1520',
     flex: 1,
@@ -190,7 +174,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#212836',
     padding: 10,
-    marginTop: 1,
     marginBottom: 10,
     borderRadius: 5,
     color: '#fff'
@@ -209,26 +192,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#212836',
     borderRadius: 5
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 10,
-    color: 'white'
-  },
-  summaryItem: {
-    alignItems: 'center',
-    flex: 1
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: 'white'
-  },
-  summaryValue: {
-    fontSize: 20,
-    marginTop: 5,
-    color: 'white'
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -255,7 +218,6 @@ const styles = StyleSheet.create({
   }
 })
 
-// Estilos personalizados para el picker con fondo oscuro
 const pickerSelectDarkStyles = {
   inputIOS: {
     fontSize: 16,
@@ -265,7 +227,6 @@ const pickerSelectDarkStyles = {
     borderColor: '#212836',
     borderRadius: 5,
     color: 'white',
-    paddingRight: 30,
     backgroundColor: '#212836'
   },
   inputAndroid: {
@@ -276,11 +237,7 @@ const pickerSelectDarkStyles = {
     borderColor: '#212836',
     borderRadius: 5,
     color: 'white',
-    paddingRight: 30,
     backgroundColor: '#212836'
-  },
-  modalViewBottom: {
-    backgroundColor: '#0D1520' // Fondo oscuro para el popup
   }
 }
 
