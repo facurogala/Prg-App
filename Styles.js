@@ -356,7 +356,7 @@ export const styles = StyleSheet.create({
   containerPercentage: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    height,
+    height
   },
   saved1RMBox: {
     backgroundColor: '#1D2533',
@@ -583,6 +583,6 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     borderColor: '#212836',
     borderWidth: 1,
-    gap: 20,
+    gap: 20
   }
 })

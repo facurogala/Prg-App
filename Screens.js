@@ -23,7 +23,6 @@ import { Picker } from '@react-native-picker/picker'
 import moment from 'moment'
 import { useFocusEffect } from '@react-navigation/native'
 import Svg, { Path, Defs, LinearGradient, Stop, Text as SvgText, Circle } from 'react-native-svg'
-import RNPickerSelect from 'react-native-picker-select'
 
 const isValidInput = (kg, reps) => {
   return !isNaN(parseFloat(kg)) && !isNaN(parseFloat(reps)) && parseFloat(reps) > 0
@@ -187,7 +186,7 @@ export const SettingsScreen = () => {
   )
 }
 
-const BOX_WIDTH = Dimensions.get('window').width * 0.9
+const BOX_WIDTH = Dimensions.get('window').width * 1.5 // Ampliado para desplazamiento horizontal
 const BOX_HEIGHT = 200
 const PADDING_X = 50
 const PADDING_Y = 30
@@ -202,8 +201,8 @@ export const ChartScreen = () => {
       const savedData = await AsyncStorage.getItem('@saved1RMs')
       const parsedData = savedData ? JSON.parse(savedData) : []
 
-      const validData = parsedData.filter(item =>
-        item && !isNaN(parseFloat(item.oneRM)) && item.date
+      const validData = parsedData.filter(
+        (item) => item && moment(item.date, moment.ISO_8601, true).isValid()
       )
 
       setChartData(validData)
@@ -215,28 +214,30 @@ export const ChartScreen = () => {
 
   const groupByMonth = (data) => {
     const grouped = {}
-    data.forEach(item => {
-      const month = moment(item.date).format('YYYY-MM')
+    data.forEach((item) => {
+      const month = moment(item.date).startOf('month').format('YYYY-MM') // Agrupar por mes completo
       if (!grouped[month]) {
         grouped[month] = []
       }
       grouped[month].push(item)
     })
+
     return Object.keys(grouped)
       .sort()
-      .map(month => {
+      .map((month) => {
         const monthData = grouped[month]
-        const maxOneRM = Math.max(...monthData.map(item => parseFloat(item.oneRM)))
+        const maxOneRM = Math.max(...monthData.map((item) => parseFloat(item.oneRM)))
         return {
-          month: moment(monthData[0].date).format('MMM YY'),
+          month: moment(monthData[0].date).format('MMM YY'), // Ejemplo: "Dec 24"
           maxOneRM
         }
       })
   }
 
   const filterData = useCallback((data, range) => {
-    const today = moment()
+    const today = moment() // Fecha actual
     let startDate
+    let endDate = today.clone().endOf('day') // Por defecto, termina al final del día actual
 
     switch (range) {
       case 'last30Days':
@@ -249,16 +250,17 @@ export const ChartScreen = () => {
         startDate = today.clone().subtract(180, 'days')
         break
       case 'lastYear':
-        startDate = today.clone().subtract(1, 'year')
+        startDate = today.clone().subtract(1, 'year').startOf('day') // Inicio hace 1 año
+        endDate = today.clone().endOf('year') // Final del año actual
         break
       case 'currentMonth':
       default:
         startDate = today.clone().startOf('month')
     }
 
-    const filtered = data.filter(record => {
+    const filtered = data.filter((record) => {
       const recordDate = moment(record.date)
-      return recordDate.isSameOrAfter(startDate) && recordDate.isSameOrBefore(today)
+      return recordDate.isBetween(startDate, endDate, 'day', '[]') // Incluye todo el rango
     })
 
     if (range === 'lastYear') {
@@ -266,7 +268,7 @@ export const ChartScreen = () => {
       setFilteredData(groupedByMonth)
     } else {
       const sortedData = filtered.sort((a, b) => new Date(a.date) - new Date(b.date))
-      const groupedData = sortedData.map(item => ({
+      const groupedData = sortedData.map((item) => ({
         date: moment(item.date).format('DD/MM').toString(),
         maxOneRM: parseFloat(item.oneRM)
       }))
@@ -280,23 +282,20 @@ export const ChartScreen = () => {
     }, [])
   )
 
-  const weeklyData = filteredData
-    .map(record => record.maxOneRM)
-    .filter(point => !isNaN(point)) // Filtrar valores NaN
-  const weeklyLabels = filteredData
-    .map(record => record.month || record.date)
-    .filter((_, index) => !isNaN(weeklyData[index])) // Filtrar etiquetas correspondientes
+  const weeklyData = filteredData.map((record) => record.maxOneRM).filter((point) => !isNaN(point))
+  const weeklyLabels = filteredData.map((record) => record.month || record.date)
 
-  const maxY = Math.ceil(Math.max(...weeklyData) * 1 / 100) * 100 || 400
+  const maxY = Math.max(Math.ceil(Math.max(...weeklyData) / 100) * 100 || 300, 300)
 
   const scaleY = (value) => {
     return !isNaN(value)
       ? BOX_HEIGHT - ((value / maxY) * (BOX_HEIGHT - PADDING_Y * 2)) - PADDING_Y
-      : 0 // Predeterminado a 0 si el valor es NaN
+      : 0
   }
+
   const scaleX = (index) => {
     return weeklyData.length > 1
-      ? (BOX_WIDTH - PADDING_X * 2) / (weeklyData.length - 1) * index + PADDING_X
+      ? ((BOX_WIDTH - PADDING_X * 5) / (weeklyData.length - 1)) * index + PADDING_X
       : PADDING_X
   }
 
@@ -334,87 +333,71 @@ export const ChartScreen = () => {
 
       {filteredData.length > 0
         ? (
-          <Svg width={BOX_WIDTH} height={BOX_HEIGHT + PADDING_Y * 2}>
-            <Defs>
-              <LinearGradient id='grad' x1='0' y1='0' x2='0' y2='1'>
-                <Stop offset='0%' stopColor='#D9E92C' stopOpacity='0.3' />
-                <Stop offset='100%' stopColor='#060B11' stopOpacity='0' />
-              </LinearGradient>
-            </Defs>
+          <ScrollView horizontal>
+            <Svg width={BOX_WIDTH} height={BOX_HEIGHT + PADDING_Y * 2}>
+              <Defs>
+                <LinearGradient id='grad' x1='0' y1='0' x2='0' y2='1'>
+                  <Stop offset='0%' stopColor='#D9E92C' stopOpacity='0.3' />
+                  <Stop offset='100%' stopColor='#060B11' stopOpacity='0' />
+                </LinearGradient>
+              </Defs>
 
-            {/* Área sombreada bajo la línea */}
-            <Path
-              d={`${linePath} L ${BOX_WIDTH - PADDING_X} ${BOX_HEIGHT - PADDING_Y} L ${PADDING_X} ${BOX_HEIGHT - PADDING_Y} Z`}
-              fill='url(#grad)'
-            />
+              <Path
+                d={`${linePath} L ${BOX_WIDTH - PADDING_X} ${BOX_HEIGHT - PADDING_Y} L ${PADDING_X} ${BOX_HEIGHT - PADDING_Y} Z`}
+                fill='url(#grad)'
+              />
 
-            {/* Línea de datos suavizada */}
-            <Path
-              d={linePath}
-              fill='none'
-              stroke='#D9E92C'
-              strokeWidth='3'
-            />
+              <Path d={linePath} fill='none' stroke='#D9E92C' strokeWidth='3' />
 
-            {/* Puntos de datos y etiquetas de 1RM */}
-            {weeklyData.map((point, index) => {
-              const x = scaleX(index)
-              const y = scaleY(point)
-              const offsetY = index % 2 === 0 ? -10 : 20
-              return (
-                <React.Fragment key={`point-${index}`}>
-                  <SvgText
-                    x={x}
-                    y={y + offsetY}
-                    fontSize='10'
-                    fill='white'
-                    textAnchor='middle'
-                  >
-                    {point} kg
-                  </SvgText>
-                  <Circle
-                    cx={x}
-                    cy={y}
-                    r='4'
-                    fill='#D9E92C'
-                  />
-                </React.Fragment>
-              )
-            })}
+              {weeklyData.map((point, index) => {
+                const x = scaleX(index)
+                const y = scaleY(point)
+                return (
+                  <React.Fragment key={`point-${index}`}>
+                    <SvgText
+                      x={x}
+                      y={y - 10}
+                      fontSize='10'
+                      fill='white'
+                      textAnchor='middle'
+                    >
+                      {point}kg
+                    </SvgText>
+                    <Circle cx={x} cy={y} r='4' fill='#D9E92C' />
+                  </React.Fragment>
+                )
+              })}
 
-            {/* Etiquetas del eje X con fechas */}
-            {weeklyLabels.map((label, index) => (
-              <SvgText
-                key={`x-label-${index}`}
-                x={scaleX(index)}
-                y={BOX_HEIGHT + PADDING_Y + 15}
-                fontSize='10'
-                fill='white'
-                textAnchor='middle'
-                rotation='45'
-                origin={`${scaleX(index)}, ${BOX_HEIGHT + PADDING_Y + 15}`}
-              >
-                {label}
-              </SvgText>
-            ))}
-
-            {/* Etiquetas del eje Y */}
-            {[...Array(5)].map((_, i) => {
-              const y = ((BOX_HEIGHT - PADDING_Y * 2) / 4) * i + PADDING_Y
-              const label = Math.round(maxY - ((maxY / 4) * i))
-              return (
+              {weeklyLabels.map((label, index) => (
                 <SvgText
-                  key={`y-label-${i}`}
-                  x='5'
-                  y={y + 12}
+                  key={`x-label-${index}`}
+                  x={scaleX(index)}
+                  y={BOX_HEIGHT + PADDING_Y + 15}
                   fontSize='10'
                   fill='white'
+                  textAnchor='middle'
                 >
-                  {label} kg
+                  {label}
                 </SvgText>
-              )
-            })}
-          </Svg>
+              ))}
+
+              {[...Array(5)].map((_, i) => {
+                const y = ((BOX_HEIGHT - PADDING_Y * 2) / 4) * i + PADDING_Y
+                const label = Math.round(maxY - ((maxY / 4) * i))
+                return (
+                  <SvgText
+                    key={`y-label-${i}`}
+                    x='5'
+                    y={y + 12}
+                    fontSize='10'
+                    fill='white'
+                  >
+                    {label} kg
+                  </SvgText>
+                )
+              })}
+            </Svg>
+          </ScrollView>
           )
         : (
           <Text style={styles.noDataText}>No hay datos disponibles para este rango</Text>
@@ -424,69 +407,69 @@ export const ChartScreen = () => {
 }
 
 export const PercentageScreen = ({ navigation }) => {
-  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext);
-  const [filter, setFilter] = useState({ exercise: 'Todos', sortBy: 'Fecha (más reciente)' });
-  const [visibleFilter, setVisibleFilter] = useState(null);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
-  const filterRefs = useRef({});
+  const { saved1RMs, setSaved1RMs } = useContext(GlobalContext)
+  const [filter, setFilter] = useState({ exercise: 'Todos', sortBy: 'Fecha (más reciente)' })
+  const [visibleFilter, setVisibleFilter] = useState(null)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 })
+  const filterRefs = useRef({})
 
   useEffect(() => {
     const cargarLevantamientos = async () => {
       try {
-        const data = await AsyncStorage.getItem('@saved1RMs');
-        const parsedData = data ? JSON.parse(data) : [];
-        setSaved1RMs(parsedData);
+        const data = await AsyncStorage.getItem('@saved1RMs')
+        const parsedData = data ? JSON.parse(data) : []
+        setSaved1RMs(parsedData)
       } catch (error) {
-        console.error('Error al cargar levantamientos', error);
+        console.error('Error al cargar levantamientos', error)
       }
-    };
-    cargarLevantamientos();
-  }, []);
+    }
+    cargarLevantamientos()
+  }, [])
 
   const toggleFilterMenu = (menu, refKey) => {
     if (visibleFilter === menu) {
-      setVisibleFilter(null);
-      return;
+      setVisibleFilter(null)
+      return
     }
 
     filterRefs.current[refKey].measure((x, y, width, height, pageX, pageY) => {
-      setMenuPosition({ top: pageY + height - 5, left: pageX, width });
-      setVisibleFilter(menu);
-    });
-  };
+      setMenuPosition({ top: pageY + height - 5, left: pageX, width })
+      setVisibleFilter(menu)
+    })
+  }
 
   const getFilteredData = () => {
-    let data = [...saved1RMs];
+    let data = [...saved1RMs]
     if (filter.exercise !== 'Todos') {
-      data = data.filter((item) => item.exercise === filter.exercise);
+      data = data.filter((item) => item.exercise === filter.exercise)
     }
     if (filter.sortBy === 'Fecha (más reciente)') {
-      data.sort((a, b) => new Date(b.date) - new Date(a.date));
+      data.sort((a, b) => new Date(b.date) - new Date(a.date))
     } else if (filter.sortBy === 'Fecha (más antigua)') {
-      data.sort((a, b) => new Date(a.date) - new Date(b.date));
+      data.sort((a, b) => new Date(a.date) - new Date(b.date))
     } else if (filter.sortBy === 'Peso (más pesado)') {
-      data.sort((a, b) => b.oneRM - a.oneRM);
+      data.sort((a, b) => b.oneRM - a.oneRM)
     } else if (filter.sortBy === 'Peso (más liviano)') {
-      data.sort((a, b) => a.oneRM - b.oneRM);
+      data.sort((a, b) => a.oneRM - b.oneRM)
     }
-    return data;
-  };
+    return data
+  }
 
   const handleFilterChange = (type, value) => {
-    setFilter((prev) => ({ ...prev, [type]: value }));
-    setVisibleFilter(null);
-  };
+    setFilter((prev) => ({ ...prev, [type]: value }))
+    setVisibleFilter(null)
+  }
 
   const eliminarLevantamiento = async (id) => {
     try {
-      const nuevosLevantamientos = saved1RMs.filter((item) => item.id !== id);
-      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos));
-      setSaved1RMs(nuevosLevantamientos);
-      console.log(`Levantamiento con ID ${id} eliminado correctamente.`);
+      const nuevosLevantamientos = saved1RMs.filter((item) => item.id !== id)
+      await AsyncStorage.setItem('@saved1RMs', JSON.stringify(nuevosLevantamientos))
+      setSaved1RMs(nuevosLevantamientos)
+      console.log(`Levantamiento con ID ${id} eliminado correctamente.`)
     } catch (error) {
-      console.error('Error al eliminar el levantamiento', error);
+      console.error('Error al eliminar el levantamiento', error)
     }
-  };
+  }
 
   const confirmarEliminacion = (id) => {
     Alert.alert(
@@ -494,19 +477,19 @@ export const PercentageScreen = ({ navigation }) => {
       '¿Estás seguro de que deseas eliminar este levantamiento?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', onPress: () => eliminarLevantamiento(id) },
+        { text: 'Eliminar', onPress: () => eliminarLevantamiento(id) }
       ]
-    );
-  };
+    )
+  }
 
-  const filteredData = getFilteredData();
+  const filteredData = getFilteredData()
 
   return (
     <TouchableWithoutFeedback
       onPress={() => {
         if (visibleFilter) {
-          setVisibleFilter(null);
-          Keyboard.dismiss();
+          setVisibleFilter(null)
+          Keyboard.dismiss()
         }
       }}
     >
@@ -540,7 +523,7 @@ export const PercentageScreen = ({ navigation }) => {
           <View
             style={[
               styles.menuContainer,
-              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width },
+              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }
             ]}
           >
             <Pressable
@@ -575,7 +558,7 @@ export const PercentageScreen = ({ navigation }) => {
           <View
             style={[
               styles.menuContainer,
-              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width },
+              { top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }
             ]}
           >
             <Pressable
@@ -607,50 +590,52 @@ export const PercentageScreen = ({ navigation }) => {
 
         {/* Lista de Resultados Filtrados */}
         <ScrollView style={styles.containerPercentage}>
-          {filteredData.length > 0 ? (
-            filteredData.map((item, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.saved1RMBox}
-                onPress={() => navigation.navigate('SaveDetails', { ...item })}
-                onLongPress={() => confirmarEliminacion(item.id)}
-              >
-                <View style={styles.headerRow}>
-                  <Text style={styles.exerciseName}>{item.exercise}</Text>
-                  <Text style={styles.dateText}>
-                    {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
-                  </Text>
-                </View>
-                <View style={styles.mainRow}>
-                  <Text style={styles.oneRMText}>{item.oneRM} kg</Text>
-                  <View style={styles.detailsColumn}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Kilos:</Text>
-                      <Text style={styles.detailValue}>{item.kg}</Text>
+          {filteredData.length > 0
+            ? (
+                filteredData.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.saved1RMBox}
+                    onPress={() => navigation.navigate('SaveDetails', { ...item })}
+                    onLongPress={() => confirmarEliminacion(item.id)}
+                  >
+                    <View style={styles.headerRow}>
+                      <Text style={styles.exerciseName}>{item.exercise}</Text>
+                      <Text style={styles.dateText}>
+                        {item.date ? new Date(item.date).toLocaleDateString() : 'Fecha no disponible'}
+                      </Text>
                     </View>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Series:</Text>
-                      <Text style={styles.detailValue}>{item.series || '-'}</Text>
+                    <View style={styles.mainRow}>
+                      <Text style={styles.oneRMText}>{item.oneRM} kg</Text>
+                      <View style={styles.detailsColumn}>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Kilos:</Text>
+                          <Text style={styles.detailValue}>{item.kg}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Series:</Text>
+                          <Text style={styles.detailValue}>{item.series || '-'}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>Reps:</Text>
+                          <Text style={styles.detailValue}>{item.reps}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>RPE:</Text>
+                          <Text style={styles.detailValue}>{item.rpe || '-'}</Text>
+                        </View>
+                      </View>
                     </View>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Reps:</Text>
-                      <Text style={styles.detailValue}>{item.reps}</Text>
-                    </View>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>RPE:</Text>
-                      <Text style={styles.detailValue}>{item.rpe || '-'}</Text>
-                    </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>No hay datos para mostrar con este filtro.</Text>
-          )}
+                  </TouchableOpacity>
+                ))
+              )
+            : (
+              <Text style={styles.noDataText}>No hay datos para mostrar con este filtro.</Text>
+              )}
         </ScrollView>
       </View>
     </TouchableWithoutFeedback>
-  );
+  )
 }
 
 export const ProfileScreen = () => {
