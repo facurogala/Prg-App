@@ -1,13 +1,14 @@
-import { useState, useCallback, useMemo } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Alert } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Animated, Alert } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer } from 'victory-native';
-import { Trash2, Filter } from 'lucide-react-native';
+import { Filter, Trash2 } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { LiftType } from './index';
 import Svg, { Defs, LinearGradient, Stop } from 'react-native-svg';
+import { LinearGradient as BorderGradient } from 'expo-linear-gradient';
 
 type HistoryEntry = {
   date: string;
@@ -27,69 +28,96 @@ const LIFT_COLORS = {
   deadlift: '#FF6347',
 } as const;
 
-const HistoryItem = ({
-  date,
-  weight,
-  reps,
-  oneRM,
+function HistoryItem({ 
+  date, 
+  weight, 
+  reps, 
+  oneRM, 
   rpe,
-  onDelete,
+  onLongPress 
 }: {
   date: string;
   weight: number;
   reps: number;
   oneRM: number;
   rpe?: number;
-  onDelete: () => void;
-}) => {
-  const handleLongPress = () => {
-    Alert.alert(
-      'Delete Entry',
-      'Are you sure you want to delete this entry?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: onDelete,
-        },
-      ],
-      { cancelable: true }
-    );
+  onLongPress: () => void;
+}) {
+  const scaleValue = new Animated.Value(1);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleValue, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
   };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleValue, {
+      toValue: 1,
+      friction: 3,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const animatedStyle = {
+    transform: [{ scale: scaleValue }],
+  };
+
+  // Verificación más robusta del RPE
+  const showRPE = rpe !== undefined && rpe !== null && !isNaN(rpe);
 
   return (
     <Pressable
-      onLongPress={handleLongPress}
-      style={({ pressed }) => [
-        styles.historyItem,
-        pressed && { opacity: 0.6 }
-      ]}
+      onLongPress={onLongPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      delayLongPress={500}
     >
-      <View style={styles.historyItemLeft}>
-        <Text style={styles.historyItemDate}>
-          {new Date(date).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-          })}
-        </Text>
-        <Text style={styles.historyItemDetails}>
-          {weight}kg × {reps} {rpe ? `@${rpe}` : ''}
-        </Text>
-      </View>
-      <Text style={styles.historyItemRM}>{Math.round(oneRM)}kg</Text>
+      <Animated.View style={[animatedStyle]}>
+        <View style={styles.itemWrapper}>
+          <BorderGradient
+            colors={['#52525250', '#52525210']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientBorder}
+          >
+            <View style={styles.item}>
+              <View>
+                <Text style={styles.date}>
+                  {new Date(date).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+                <View style={styles.detailsContainer}>
+                  <Text style={styles.details}>
+                    {weight}kg × {reps} reps
+                  </Text>
+                  {showRPE && (
+                    <Text style={styles.rpe}> @RPE {rpe}</Text>
+                  )}
+                </View>
+              </View>
+              <Text style={styles.oneRM}>{Math.round(oneRM)}kg 1RM</Text>
+            </View>
+          </BorderGradient>
+        </View>
+      </Animated.View>
     </Pressable>
   );
-};
+}
 
 export default function History() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selectedLift, setSelectedLift] = useState<LiftType>('squat');
   const [filter, setFilter] = useState<'date' | 'highest' | 'lowest'>('date');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<HistoryEntry | null>(null);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -114,23 +142,22 @@ export default function History() {
     }, [loadHistory])
   );
 
-  const clearHistory = async () => {
+  const deleteItem = async () => {
+    if (!selectedItem) return;
+    
     try {
-      await AsyncStorage.removeItem('calculationHistory');
-      setHistory([]);
+      const newHistory = history.filter(item => item.id !== selectedItem.id);
+      await AsyncStorage.setItem('calculationHistory', JSON.stringify(newHistory));
+      setHistory(newHistory);
+      setDeleteModalVisible(false);
     } catch (error) {
-      console.error('Error clearing history:', error);
+      console.error('Error deleting item:', error);
     }
   };
 
-  const deleteHistoryItem = async (itemId: string) => {
-    try {
-      const newHistory = history.filter(item => item.id !== itemId);
-      await AsyncStorage.setItem('calculationHistory', JSON.stringify(newHistory));
-      setHistory(newHistory);
-    } catch (error) {
-      console.error('Error deleting history item:', error);
-    }
+  const handleLongPress = (item: HistoryEntry) => {
+    setSelectedItem(item);
+    setDeleteModalVisible(true);
   };
 
   const filteredHistory = history.filter(entry => entry.liftType === selectedLift);
@@ -272,9 +299,6 @@ export default function History() {
                 <Pressable onPress={() => setIsFilterVisible(true)} style={styles.iconButton}>
                   <Filter size={20} color="#B8B8B8" />
                 </Pressable>
-                <Pressable onPress={clearHistory} style={styles.iconButton}>
-                  <Trash2 size={20} color="#B8B8B8" />
-                </Pressable>
               </View>
             </View>
 
@@ -288,7 +312,7 @@ export default function History() {
                     reps={entry.reps}
                     oneRM={entry.oneRM}
                     rpe={entry.rpe}
-                    onDelete={() => deleteHistoryItem(entry.id!)}
+                    onLongPress={() => handleLongPress(entry)}
                   />
                 ))}
               </View>
@@ -301,6 +325,7 @@ export default function History() {
         )}
       </ScrollView>
 
+      {/* Filter Modal */}
       <Modal
         transparent={true}
         visible={isFilterVisible}
@@ -363,6 +388,41 @@ export default function History() {
                 Lowest
               </Text>
             </Pressable>
+          </BlurView>
+        </Pressable>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        transparent={true}
+        visible={deleteModalVisible}
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <Pressable 
+          style={styles.modalOverlay} 
+          onPress={() => setDeleteModalVisible(false)}
+        >
+          <BlurView intensity={20} tint="dark" style={styles.deleteModalContainer}>
+            <Text style={styles.deleteModalTitle}>Delete Record</Text>
+            <Text style={styles.deleteModalText}>
+              Are you sure you want to delete this record?
+            </Text>
+            <View style={styles.deleteModalButtons}>
+              <Pressable 
+                style={[styles.deleteModalButton, styles.deleteModalCancelButton]}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.deleteModalButtonText}>Cancel</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.deleteModalButton, styles.deleteModalConfirmButton]}
+                onPress={deleteItem}
+              >
+                <Trash2 size={16} color="#fff" style={styles.deleteIcon} />
+                <Text style={styles.deleteModalButtonText}>Delete</Text>
+              </Pressable>
+            </View>
           </BlurView>
         </Pressable>
       </Modal>
@@ -459,6 +519,55 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#525252',
   },
+  deleteModalContainer: {
+    borderRadius: 20,
+    padding: 24,
+    width: '80%',
+    backgroundColor: 'rgba(20, 20, 20, 0.9)',
+    borderWidth: 1,
+    borderColor: '#FF4444',
+    alignItems: 'center',
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FF4444',
+    marginBottom: 8,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    color: '#B8B8B8',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 16,
+  },
+  deleteModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  deleteModalCancelButton: {
+    backgroundColor: '#525252',
+  },
+  deleteModalConfirmButton: {
+    backgroundColor: '#FF4444',
+  },
+  deleteModalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  deleteIcon: {
+    marginRight: 8,
+  },
   filterButton: {
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -514,32 +623,40 @@ const styles = StyleSheet.create({
     color: '#525252',
     fontSize: 16,
   },
-  historyItem: {
-    backgroundColor: 'rgba(26, 26, 26, 0.5)',
+  itemWrapper: {
     borderRadius: 12,
-    padding: 16,
+    overflow: 'hidden',
+  },
+  gradientBorder: {
+    padding: 1,
+    borderRadius: 12,
+  },
+  item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    textAlign: 'center',
+    padding: 16,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 11,
   },
-  historyItemLeft: {
-    flexDirection: 'column',
-  },
-  historyItemDate: {
-    color: '#B8B8B8',
+  date: {
     fontSize: 14,
-    opacity: 0.8,
     marginBottom: 4,
-  },
-  historyItemDetails: {
     color: '#B8B8B8',
-    fontSize: 16,
-    fontWeight: '500',
   },
-  historyItemRM: {
-    color: '#B8B8B8',
+  details: {
+    color: '#525252',
     fontSize: 16,
-    fontWeight: 'bold',
+  },
+  rpe: {
+    color: '#DBFF00',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  oneRM: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#B8B8B8',
+    textAlign: 'center',
   },
 });

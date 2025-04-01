@@ -348,6 +348,7 @@ const styles = StyleSheet.create({
     color: '#B8B8B8',
     fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
   },
   liftButtonTextSelected: {
     color: '#B8B8B8',
@@ -410,17 +411,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 2,
+    textAlign: 'center',
   },
   rmValue: {
     color: '#B8B8B8',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 2,
+    textAlign: 'center',
   },
   rmPercentage: {
     color: '#525252',
     fontSize: 11,
     fontWeight: '500',
+    textAlign: 'center',
   },
   saveButton: {
     marginTop: 24,
