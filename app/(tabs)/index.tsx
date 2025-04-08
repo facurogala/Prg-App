@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView, Pressable, Modal, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFormulas } from '../../contexts/FormulaContext';
@@ -17,31 +17,31 @@ export type LiftType = 'squat' | 'bench' | 'deadlift';
 const formulas: { [key: string]: Formula } = {
   lander: {
     name: 'Lander',
-    calculate: (w, r) => (100 * w) / (101.3 - 2.67123 * r),
+    calculate: (w, r) => r === 1 ? w : (100 * w) / (101.3 - 2.67123 * r),
   },
   oconner: {
     name: "O'Conner",
-    calculate: (w, r) => w * (1 + 0.025 * r),
+    calculate: (w, r) => r === 1 ? w : w * (1 + 0.025 * r),
   },
   lombardi: {
     name: 'Lombardi',
-    calculate: (w, r) => w * Math.pow(r, 0.1),
+    calculate: (w, r) => r === 1 ? w : w * Math.pow(r, 0.1),
   },
   mayhem: {
     name: 'Mayhem',
-    calculate: (w, r) => w * (1 + 0.033 * r),
+    calculate: (w, r) => r === 1 ? w : w * (1 + 0.033 * r),
   },
   wathen: {
     name: 'Wathen',
-    calculate: (w, r) => (100 * w) / (48.8 + 53.8 * Math.exp(-0.075 * r)),
+    calculate: (w, r) => r === 1 ? w : (100 * w) / (48.8 + 53.8 * Math.exp(-0.075 * r)),
   },
   brzycki: {
     name: 'Brzycki',
-    calculate: (w, r) => w * (36 / (37 - r)),
+    calculate: (w, r) => r === 1 ? w : w * (36 / (37 - r)),
   },
   epley: {
     name: 'Epley',
-    calculate: (w, r) => w * (1 + 0.0333 * r),
+    calculate: (w, r) => r === 1 ? w : w * (1 + 0.0333 * r),
   },
 };
 
@@ -64,7 +64,8 @@ export default function Calculator() {
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('');
   const [rmValues, setRmValues] = useState<number[] | null[]>(Array.from({ length: 20 }, () => null));
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'selecting'>('idle');
+  const [showLiftModal, setShowLiftModal] = useState(false);
   const [selectedLift, setSelectedLift] = useState<LiftType>('squat');
   const { selectedFormulas } = useFormulas();
 
@@ -97,34 +98,44 @@ export default function Calculator() {
     setSaveStatus('idle');
   };
 
-  const saveCalculation = async () => {
+  const calculateOneRM = (w: number, r: number) => {
+    if (r === 1) return w;
+    
+    const oneRMs = selectedFormulas.map(formulaId => 
+      formulas[formulaId].calculate(w, r)
+    );
+    return oneRMs.reduce((a, b) => a + b, 0) / oneRMs.length;
+  };
+
+  const handleSavePress = () => {
     if (!weight || !reps || rmValues.length === 0) return;
-  
-    console.log("RPE input:", rpe, "Tipo:", typeof rpe); // Depuración
-  
+    setShowLiftModal(true);
+    setSaveStatus('selecting');
+  };
+
+  const confirmSaveCalculation = async (liftType: LiftType) => {
     try {
       setSaveStatus('saving');
+      setSelectedLift(liftType);
+      setShowLiftModal(false);
+      
       const numericRpe = rpe && !isNaN(Number(rpe)) ? Number(rpe) : undefined;
-  
-      console.log("RPE convertido:", numericRpe, "Tipo:", typeof numericRpe); // Depuración
-  
+
       const newEntry = {
         date: new Date().toLocaleString(),
         weight: parseFloat(weight),
         reps: parseFloat(reps),
-        oneRM: rmValues[0],
-        rpe: numericRpe, // Usamos el valor convertido
-        liftType: selectedLift,
+        oneRM: rmValues[0] || parseFloat(weight),
+        rpe: numericRpe,
+        liftType: liftType,
         id: Date.now().toString(),
       };
-  
-      console.log("Datos a guardar:", newEntry); // Depuración
-  
+
       const existingHistory = await AsyncStorage.getItem('calculationHistory');
       const history = existingHistory ? JSON.parse(existingHistory) : [];
       history.push(newEntry);
       await AsyncStorage.setItem('calculationHistory', JSON.stringify(history));
-  
+
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
@@ -139,20 +150,23 @@ export default function Calculator() {
       const r = parseFloat(reps);
 
       if (!isNaN(w) && !isNaN(r)) {
-        const oneRMs = selectedFormulas.map(formulaId =>
-          formulas[formulaId].calculate(w, r)
-        );
-        const avgOneRM = oneRMs.reduce((a, b) => a + b, 0) / oneRMs.length;
-
-        const newRmValues = Array.from({ length: 20 }, (_, i) => {
-          const repFactor = 1 - (i * 0.025);
-          return avgOneRM * repFactor;
-        });
-
-        setRmValues(newRmValues);
+        if (r === 1) {
+          const newRmValues = Array.from({ length: 20 }, (_, i) => {
+            if (i === 0) return w;
+            const repFactor = 1 - (i * 0.025);
+            return w * repFactor;
+          });
+          setRmValues(newRmValues);
+        } else {
+          const avgOneRM = calculateOneRM(w, r);
+          const newRmValues = Array.from({ length: 20 }, (_, i) => {
+            const repFactor = 1 - (i * 0.025);
+            return avgOneRM * repFactor;
+          });
+          setRmValues(newRmValues);
+        }
       }
     } else {
-      // Si no hay datos, llenamos el array con valores null
       setRmValues(Array.from({ length: 20 }, () => null));
     }
   }, [weight, reps, selectedFormulas]);
@@ -168,26 +182,6 @@ export default function Calculator() {
         <Text style={styles.title}>1RM Calculator</Text>
 
         <BlurView intensity={20} tint="dark" style={styles.card}>
-          <View style={styles.liftSelector}>
-            {(['squat', 'bench', 'deadlift'] as LiftType[]).map((lift) => (
-              <Pressable
-                key={lift}
-                style={[
-                  styles.liftButton,
-                  selectedLift === lift && styles.liftButtonSelected,
-                ]}
-                onPress={() => setSelectedLift(lift)}>
-                <Text
-                  style={[
-                    styles.liftButtonText,
-                    selectedLift === lift && styles.liftButtonTextSelected,
-                  ]}>
-                  {lift.charAt(0).toUpperCase() + lift.slice(1)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
           <View style={styles.inputRow}>
             <View style={[styles.inputWrapper, { flex: 2 }]}>
               <Text style={styles.label}>Weight (kg)</Text>
@@ -235,7 +229,7 @@ export default function Calculator() {
 
           {rmValues.length > 0 && (
             <Pressable
-              onPress={saveCalculation}
+              onPress={handleSavePress}
               style={({ pressed }) => [
                 styles.saveButton,
                 saveStatus === 'saved' && styles.saveButtonSuccess,
@@ -292,6 +286,42 @@ export default function Calculator() {
           ))}
         </BlurView>
       </ScrollView>
+
+      {/* Modal para seleccionar tipo de levantamiento */}
+      <Modal
+        visible={showLiftModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setShowLiftModal(false);
+          setSaveStatus('idle');
+        }}>
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={20} tint="dark" style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Lift Type</Text>
+            
+            {(['squat', 'bench', 'deadlift'] as LiftType[]).map((lift) => (
+              <TouchableOpacity
+                key={lift}
+                style={styles.modalOption}
+                onPress={() => confirmSaveCalculation(lift)}>
+                <Text style={styles.modalOptionText}>
+                  {lift.charAt(0).toUpperCase() + lift.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            
+            <TouchableOpacity
+              style={styles.modalCancel}
+              onPress={() => {
+                setShowLiftModal(false);
+                setSaveStatus('idle');
+              }}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </BlurView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -324,34 +354,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 16,
     backgroundColor: 'rgba(20, 20, 20, 0.8)',
-  },
-  liftSelector: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  liftButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#1a1a1a',
-    textAlign: 'center',
-    borderWidth: 1,
-    borderColor: '#525252',
-  },
-  liftButtonSelected: {
-    backgroundColor: '#525252',
-    borderColor: '#B8B8B8',
-  },
-  liftButtonText: {
-    color: '#B8B8B8',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  liftButtonTextSelected: {
-    color: '#B8B8B8',
   },
   inputRow: {
     flexDirection: 'row',
@@ -470,5 +472,51 @@ const styles = StyleSheet.create({
   },
   saveButtonTextSuccess: {
     color: '#B8B8B8',
+  },
+  // Estilos para el modal
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 20,
+  },
+  modalContent: {
+    width: '80%',
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: 'rgba(30, 30, 30, 0.9)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#B8B8B8',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalOption: {
+    padding: 15,
+    borderRadius: 12,
+    backgroundColor: '#1a1a1a',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#525252',
+  },
+  modalOptionText: {
+    color: '#B8B8B8',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  modalCancel: {
+    marginTop: 10,
+    padding: 15,
+    borderRadius: 12,
+  },
+  modalCancelText: {
+    color: '#DBFF00',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
