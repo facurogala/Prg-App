@@ -48,7 +48,7 @@ const formulas: { [key: string]: Formula } = {
 const GradientBox = ({ children, color }: { children: React.ReactNode; color: string }) => (
   <View style={styles.gradientWrapper}>
     <LinearGradient
-      colors={[`${color}30`, '#52525210']}
+      colors={[`${color}30`, '#52525210']}  // Cambiado esto
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBorder}
@@ -229,34 +229,29 @@ export default function Calculator() {
 
           {rmValues.length > 0 && (
             <Pressable
-              onPress={handleSavePress}
-              style={({ pressed }) => [
-                styles.saveButton,
-                saveStatus === 'saved' && styles.saveButtonSuccess,
-                pressed && styles.saveButtonPressed
-              ]}>
-              <LinearGradient
-                colors={saveStatus === 'saved' ? ['#525252', '#525252'] : ['#1a1a1a', '#1a1a1a']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.saveButtonGradient}>
-                <View style={styles.saveButtonContent}>
-                  <Save
-                    size={18}
-                    color={saveStatus === 'saved' ? '#B8B8B8' : '#525252'}
-                    style={styles.saveButtonIcon}
-                  />
-                  <Text style={[
-                    styles.saveButtonText,
-                    saveStatus === 'saved' && styles.saveButtonTextSuccess
-                  ]}>
-                    {saveStatus === 'saving' ? 'Saving...' :
-                      saveStatus === 'saved' ? 'Saved!' :
-                        'Save Calculation'}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </Pressable>
+            onPress={handleSavePress}
+            style={({ pressed }) => [
+              styles.saveButton,
+              saveStatus === 'saved' && styles.saveButtonSuccess,
+              pressed && styles.saveButtonPressed
+            ]}>
+            <LinearGradient
+              colors={saveStatus === 'saved' ? ['#DBFF00', '#DBFF00'] : ['#1a1a1a', '#1a1a1a']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.saveButtonGradient}>
+              <View style={styles.saveButtonContent}>
+                <Text style={[
+                  styles.saveButtonText,
+                  saveStatus === 'saved' && styles.saveButtonTextSuccess
+                ]}>
+                  {saveStatus === 'saving' ? 'Saving...' :
+                    saveStatus === 'saved' ? 'Saved!' :
+                      'Save Calculation'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </Pressable>
           )}
         </BlurView>
 
@@ -441,6 +436,8 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    alignSelf: 'center',
+    width: '80%',
   },
   saveButtonPressed: {
     opacity: 0.9,
@@ -457,21 +454,19 @@ const styles = StyleSheet.create({
   saveButtonContent: {
     flex: 1,
     flexDirection: 'row',
-    textAlign: 'center',
     justifyContent: 'center',
-    gap: 8,
-  },
-  saveButtonIcon: {
-    marginRight: 4,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderRadius: 21,
   },
   saveButtonText: {
-    color: '#525252',
+    color: '#B8B8B8',
     fontSize: 15,
     fontWeight: '600',
     letterSpacing: 0.5,
   },
   saveButtonTextSuccess: {
-    color: '#B8B8B8',
+    color: '#111111',
   },
   // Estilos para el modal
   modalOverlay: {
