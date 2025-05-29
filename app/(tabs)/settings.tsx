@@ -1,7 +1,9 @@
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Check } from 'lucide-react-native';
+import * as Font from 'expo-font';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFormulas } from '../../contexts/FormulaContext';
 
 const availableFormulas = [
@@ -43,10 +45,22 @@ const availableFormulas = [
 ];
 
 export default function Settings() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
   const { selectedFormulas, setSelectedFormulas } = useFormulas();
 
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        ...MaterialCommunityIcons.font,
+      });
+      setFontsLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
+
   const toggleFormula = (formulaId: string) => {
-    setSelectedFormulas(current => {
+    setSelectedFormulas((current: string[]) => {
       if (current.includes(formulaId)) {
         if (current.length === 1) return current;
         return current.filter(id => id !== formulaId);
@@ -55,17 +69,27 @@ export default function Settings() {
     });
   };
 
+  if (!fontsLoaded) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading fonts...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <Text style={styles.title}>Settings</Text>
-        
+
         <BlurView intensity={20} tint="dark" style={styles.card}>
           <Text style={styles.subtitle}>Active Formulas</Text>
           <Text style={styles.description}>
             Select which formulas you want to use in the calculator.
           </Text>
-          
+
           <View style={styles.formulaList}>
             {availableFormulas.map((formula, index) => (
               <Pressable
@@ -84,7 +108,7 @@ export default function Settings() {
                   selectedFormulas.includes(formula.id) && styles.checkboxSelected
                 ]}>
                   {selectedFormulas.includes(formula.id) && (
-                    <Check size={16} color="#1a1a1a" />
+                    <MaterialCommunityIcons name="check" size={16} color="#1a1a1a" />
                   )}
                 </View>
               </Pressable>
@@ -171,4 +195,14 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     backgroundColor: '#DBFF00',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#111111',
+  },
+  loadingText: {
+    color: '#DBFF00',
+    fontSize: 16,
+  }
 });

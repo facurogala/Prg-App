@@ -4,12 +4,39 @@ import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer } from 'victory-native';
-import { Filter, Trash2, Calendar, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { LiftType } from './index';
 import Svg, { Defs, LinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient as BorderGradient } from 'expo-linear-gradient';
 
+const ChevronLeft = ({ size, color }: { size: number; color: string }) => (
+  <MaterialCommunityIcons name="chevron-left" size={size} color={color} />
+);
+
+const ChevronRight = ({ size, color }: { size: number; color: string }) => (
+  <MaterialCommunityIcons name="chevron-right" size={size} color={color} />
+);
+
+const Check = ({ size, color, style }: { size: number; color: string; style?: any }) => (
+  <MaterialCommunityIcons name="check" size={size} color={color} style={style} />
+);
+
+const Filter = ({ size, color }: { size: number; color: string }) => (
+  <Feather name="filter" size={size} color={color} />
+);
+
+const Calendar = ({ size, color, style }: { size: number; color: string; style?: any }) => (
+  <Feather name="calendar" size={size} color={color} style={style} />
+);
+
+const Clock = ({ size, color, style }: { size: number; color: string; style?: any }) => (
+  <Feather name="clock" size={size} color={color} style={style} />
+);
+
+const Trash2 = ({ size, color, style }: { size: number; color: string; style?: any }) => (
+  <Feather name="trash-2" size={size} color={color} style={style} />
+);
 
 // Extend Date with getWeek function
 declare global {
@@ -23,7 +50,7 @@ Date.prototype.getWeek = function() {
   date.setHours(0, 0, 0, 0);
   date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
   const week1 = new Date(date.getFullYear(), 0, 4);
-  return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 };
 
 type HistoryEntry = {
@@ -975,6 +1002,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderWidth: 1,
     borderColor: '#525252',
+    alignItems: 'center',    
+    justifyContent: 'center', 
   },
   liftButtonSelected: {
     backgroundColor: '#525252',
