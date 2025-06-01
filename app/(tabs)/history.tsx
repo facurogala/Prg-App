@@ -401,17 +401,6 @@ export default function History() {
     return data;
   }, []);
 
-  const chartYDomain = useMemo(() => {
-    if (chartData.length === 0) {
-      return [0, 100]; // Default domain when no data
-    }
-    const values = chartData.map(d => d.y);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const padding = (max - min) * 0.2;
-    return [Math.max(0, min - padding), max + padding];
-  }, [chartData]);
-
   const loadHistory = useCallback(async () => {
     try {
       const savedHistory = await AsyncStorage.getItem('calculationHistory');
@@ -533,6 +522,17 @@ export default function History() {
   
     return filterAndGroupChartData(rawData, timeRange);
   }, [history, selectedLift, timeRange]);
+
+  const chartYDomain = useMemo(() => {
+    if (chartData.length === 0) {
+      return [0, 100]; // Default domain when no data
+    }
+    const values = chartData.map(d => d.y);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const padding = (max - min) * 0.2;
+    return [Math.max(0, min - padding), max + padding];
+  }, [chartData]);
 
   const updateHistoryItem = async (updatedItem: HistoryEntry) => {
     if (!selectedItem) return;
