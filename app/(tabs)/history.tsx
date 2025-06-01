@@ -1,17 +1,37 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Animated, TextInput, Alert, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Animated, TextInput, Alert, TouchableOpacity, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer } from 'victory-native';
 import { Filter, Trash2, Calendar, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { LiftType } from './index';
 import Svg, { Defs, LinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient as BorderGradient } from 'expo-linear-gradient';
 
+const VictoryComponents = Platform.select({
+  web: () => {
+    const victory = require('victory');
+    return {
+      VictoryChart: victory.VictoryChart,
+      VictoryLine: victory.VictoryLine,
+      VictoryAxis: victory.VictoryAxis,
+      VictoryArea: victory.VictoryArea,
+      VictoryClipContainer: victory.VictoryClipContainer,
+    };
+  },
+  default: () => {
+    const victoryNative = require('victory-native');
+    return {
+      VictoryChart: victoryNative.VictoryChart,
+      VictoryLine: victoryNative.VictoryLine,
+      VictoryAxis: victoryNative.VictoryAxis,
+      VictoryArea: victoryNative.VictoryArea,
+      VictoryClipContainer: victoryNative.VictoryClipContainer,
+    };
+  },
+})();
 
-// Extend Date with getWeek function
 declare global {
   interface Date {
     getWeek(): number;
@@ -376,6 +396,72 @@ function HistoryItem({
   );
 }
 
+function Chart({ data, selectedLift }: { data: any[], selectedLift: LiftType }) {
+  const { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer } = VictoryComponents;
+
+  if (data.length === 0) {
+    return <Text style={styles.noDataText}>No data for {selectedLift} in selected time range</Text>;
+  }
+
+  return (
+    <View style={styles.chartContainer}>
+      <VictoryChart
+        height={220}
+        width={screenWidth - 64}
+        padding={{ top: 20, bottom: 40, left: 50, right: 30 }}
+        domainPadding={{ x: [20, 20], y: [20, 20] }}
+        scale={{ x: "time", y: "linear" }}
+        domain={{ y: [Math.min(...data.map(d => d.y)), Math.max(...data.map(d => d.y))] }}
+      >
+        <Defs>
+          <LinearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.3" />
+            <Stop offset="100%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.05" />
+          </LinearGradient>
+        </Defs>
+
+        <VictoryAxis
+          scale="time"
+          tickFormat={(x) => formatTick(x)}
+          style={{
+            axis: { stroke: '#525252' },
+            tickLabels: {
+              fill: '#B8B8B8',
+              fontSize: 10,
+              angle: -45,
+              textAnchor: 'end',
+              padding: 5
+            }
+          }}
+        />
+        <VictoryAxis
+          dependentAxis
+          tickFormat={(y) => `${Math.round(y)}kg`}
+          style={{
+            axis: { stroke: '#525252' },
+            tickLabels: {
+              fill: '#B8B8B8',
+              fontSize: 10,
+              padding: 5
+            }
+          }}
+        />
+        <VictoryArea
+          data={data}
+          interpolation="basis"
+          style={{ data: { fill: "url(#chartGradient)", stroke: "transparent" } }}
+          groupComponent={<VictoryClipContainer clipPadding={{ top: 5, right: 5 }} />}
+        />
+        <VictoryLine
+          data={data}
+          interpolation="basis"
+          style={{ data: { stroke: LIFT_COLORS[selectedLift], strokeWidth: 2, strokeLinecap: "round" } }}
+        />
+      </VictoryChart>
+    </View>
+  );
+}
+
 export default function History() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selectedLift, setSelectedLift] = useState<LiftType>('squat');
@@ -425,7 +511,6 @@ export default function History() {
     const now = new Date();
     let filteredData = [...data];
     
-    // 1. Filtrado por rango de tiempo
     switch (range) {
       case 'week': {
         const weekAgo = new Date(now);
@@ -465,23 +550,20 @@ export default function History() {
       }
       case 'all':
       default:
-        // No filtrar
         break;
     }
   
-    // 2. Agrupación por fecha (ignorando la hora)
     const groupedByDate: Record<string, {date: string, y: number, x: Date}> = {};
     
     filteredData.forEach(entry => {
       const entryDate = new Date(entry.date);
-      const dateKey = entryDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      const dateKey = entryDate.toISOString().split('T')[0];
       
       if (!groupedByDate[dateKey] || entry.y > groupedByDate[dateKey].y) {
-        groupedByDate[dateKey] = entry; // Conserva solo el valor más alto
+        groupedByDate[dateKey] = entry;
       }
     });
   
-    // 3. Convertir a array y ordenar
     return Object.values(groupedByDate).sort((a, b) => a.x.getTime() - b.x.getTime());
   };
 
@@ -512,9 +594,8 @@ export default function History() {
         x: new Date(entry.date)
       }));
   
-
-      return filterAndGroupChartData(rawData, timeRange);
-    }, [history, selectedLift, timeRange]);
+    return filterAndGroupChartData(rawData, timeRange);
+  }, [history, selectedLift, timeRange]);
 
   const updateHistoryItem = async (updatedItem: HistoryEntry) => {
     if (!selectedItem) return;
@@ -626,66 +707,7 @@ export default function History() {
               </View>
 
               <Text style={styles.subtitle}>Progress Chart</Text>
-
-              {chartData.length > 0 ? (
-                <View style={styles.chartContainer}>
-                  <VictoryChart
-                    height={220}
-                    width={screenWidth - 64}
-                    padding={{ top: 20, bottom: 40, left: 50, right: 30 }}
-                    domainPadding={{ x: [20, 20], y: [20, 20] }}
-                    scale={{ x: "time", y: "linear" }}
-                    domain={{ y: [Math.min(...chartData.map(d => d.y)), Math.max(...chartData.map(d => d.y))] }}
-                  >
-                    <Defs>
-                      <LinearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                        <Stop offset="0%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.3" />
-                        <Stop offset="100%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.05" />
-                      </LinearGradient>
-                    </Defs>
-
-                    <VictoryAxis
-                      scale="time"
-                      tickFormat={(x) => formatTick(x)}
-                      style={{
-                        axis: { stroke: '#525252' },
-                        tickLabels: {
-                          fill: '#B8B8B8',
-                          fontSize: 10,
-                          angle: -45,
-                          textAnchor: 'end',
-                          padding: 5
-                        }
-                      }}
-                    />
-                    <VictoryAxis
-                      dependentAxis
-                      tickFormat={(y) => `${Math.round(y)}kg`}
-                      style={{
-                        axis: { stroke: '#525252' },
-                        tickLabels: {
-                          fill: '#B8B8B8',
-                          fontSize: 10,
-                          padding: 5
-                        }
-                      }}
-                    />
-                    <VictoryArea
-                      data={chartData}
-                      interpolation="basis"
-                      style={{ data: { fill: "url(#chartGradient)", stroke: "transparent" } }}
-                      groupComponent={<VictoryClipContainer clipPadding={{ top: 5, right: 5 }} />}
-                    />
-                    <VictoryLine
-                      data={chartData}
-                      interpolation="basis"
-                      style={{ data: { stroke: LIFT_COLORS[selectedLift], strokeWidth: 2, strokeLinecap: "round" } }}
-                    />
-                  </VictoryChart>
-                </View>
-              ) : (
-                <Text style={styles.noDataText}>No data for {selectedLift} in selected time range</Text>
-              )}
+              <Chart data={chartData} selectedLift={selectedLift} />
             </BlurView>
 
             <View style={styles.filterHeader}>
