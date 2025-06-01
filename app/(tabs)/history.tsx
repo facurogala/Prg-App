@@ -1,36 +1,14 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Animated, TextInput, Alert, TouchableOpacity, Platform } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, Dimensions, Modal, Animated, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer, VictoryScatter } from 'victory-native';
 import { Filter, Trash2, Calendar, Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { LiftType } from './index';
 import Svg, { Defs, LinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient as BorderGradient } from 'expo-linear-gradient';
-
-const VictoryComponents = Platform.select({
-  web: () => {
-    const victory = require('victory');
-    return {
-      VictoryChart: victory.VictoryChart,
-      VictoryLine: victory.VictoryLine,
-      VictoryAxis: victory.VictoryAxis,
-      VictoryArea: victory.VictoryArea,
-      VictoryClipContainer: victory.VictoryClipContainer,
-    };
-  },
-  default: () => {
-    const victoryNative = require('victory-native');
-    return {
-      VictoryChart: victoryNative.VictoryChart,
-      VictoryLine: victoryNative.VictoryLine,
-      VictoryAxis: victoryNative.VictoryAxis,
-      VictoryArea: victoryNative.VictoryArea,
-      VictoryClipContainer: victoryNative.VictoryClipContainer,
-    };
-  },
-})();
 
 declare global {
   interface Date {
@@ -60,7 +38,7 @@ const screenWidth = Dimensions.get('window').width;
 const LIFT_COLORS = {
   squat: '#98FB98',
   bench: '#87CEEB',
-  deadlift: '#FF6347',
+  deadlift: '#FF4444',
 } as const;
 
 const formatTick = (date: Date) => {
@@ -396,72 +374,6 @@ function HistoryItem({
   );
 }
 
-function Chart({ data, selectedLift }: { data: any[], selectedLift: LiftType }) {
-  const { VictoryChart, VictoryLine, VictoryAxis, VictoryArea, VictoryClipContainer } = VictoryComponents;
-
-  if (data.length === 0) {
-    return <Text style={styles.noDataText}>No data for {selectedLift} in selected time range</Text>;
-  }
-
-  return (
-    <View style={styles.chartContainer}>
-      <VictoryChart
-        height={220}
-        width={screenWidth - 64}
-        padding={{ top: 20, bottom: 40, left: 50, right: 30 }}
-        domainPadding={{ x: [20, 20], y: [20, 20] }}
-        scale={{ x: "time", y: "linear" }}
-        domain={{ y: [Math.min(...data.map(d => d.y)), Math.max(...data.map(d => d.y))] }}
-      >
-        <Defs>
-          <LinearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.3" />
-            <Stop offset="100%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.05" />
-          </LinearGradient>
-        </Defs>
-
-        <VictoryAxis
-          scale="time"
-          tickFormat={(x) => formatTick(x)}
-          style={{
-            axis: { stroke: '#525252' },
-            tickLabels: {
-              fill: '#B8B8B8',
-              fontSize: 10,
-              angle: -45,
-              textAnchor: 'end',
-              padding: 5
-            }
-          }}
-        />
-        <VictoryAxis
-          dependentAxis
-          tickFormat={(y) => `${Math.round(y)}kg`}
-          style={{
-            axis: { stroke: '#525252' },
-            tickLabels: {
-              fill: '#B8B8B8',
-              fontSize: 10,
-              padding: 5
-            }
-          }}
-        />
-        <VictoryArea
-          data={data}
-          interpolation="basis"
-          style={{ data: { fill: "url(#chartGradient)", stroke: "transparent" } }}
-          groupComponent={<VictoryClipContainer clipPadding={{ top: 5, right: 5 }} />}
-        />
-        <VictoryLine
-          data={data}
-          interpolation="basis"
-          style={{ data: { stroke: LIFT_COLORS[selectedLift], strokeWidth: 2, strokeLinecap: "round" } }}
-        />
-      </VictoryChart>
-    </View>
-  );
-}
-
 export default function History() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selectedLift, setSelectedLift] = useState<LiftType>('squat');
@@ -474,6 +386,31 @@ export default function History() {
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
   const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const emptyChartData = useMemo(() => {
+    const now = new Date();
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      data.push({
+        x: date,
+        y: null
+      });
+    }
+    return data;
+  }, []);
+
+  const chartYDomain = useMemo(() => {
+    if (chartData.length === 0) {
+      return [0, 100]; // Default domain when no data
+    }
+    const values = chartData.map(d => d.y);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const padding = (max - min) * 0.2;
+    return [Math.max(0, min - padding), max + padding];
+  }, [chartData]);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -674,72 +611,168 @@ export default function History() {
       <ScrollView style={styles.scrollView}>
         <Text style={styles.title}>History</Text>
 
-        {history.length > 0 ? (
-          <>
-            <BlurView intensity={20} tint="dark" style={styles.card}>
-              <View style={styles.liftSelector}>
-                {(['squat', 'bench', 'deadlift'] as const).map((lift) => (
-                  <Pressable
-                    key={lift}
-                    style={[styles.liftButton, selectedLift === lift && styles.liftButtonSelected]}
-                    onPress={() => setSelectedLift(lift)}>
-                    <Text style={[styles.liftButtonText, selectedLift === lift && styles.liftButtonTextSelected]}>
-                      {lift.charAt(0).toUpperCase() + lift.slice(1)}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+        <BlurView intensity={20} tint="dark" style={styles.card}>
+          <View style={styles.liftSelector}>
+            {(['squat', 'bench', 'deadlift'] as const).map((lift) => (
+              <Pressable
+                key={lift}
+                style={[styles.liftButton, selectedLift === lift && styles.liftButtonSelected]}
+                onPress={() => setSelectedLift(lift)}>
+                <Text style={[styles.liftButtonText, selectedLift === lift && styles.liftButtonTextSelected]}>
+                  {lift.charAt(0).toUpperCase() + lift.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-              <View style={styles.timeRangeSelector}>
-                {(['all', 'week', 'month', '6months', 'year'] as const).map((range) => (
-                  <Pressable
-                    key={range}
-                    style={[styles.timeRangeButton, timeRange === range && styles.timeRangeButtonSelected]}
-                    onPress={() => setTimeRange(range)}>
-                    <Text style={[styles.timeRangeButtonText, timeRange === range && styles.timeRangeButtonTextSelected]}>
-                      {range === 'all' ? 'All' : 
-                       range === 'week' ? '1W' : 
-                       range === 'month' ? '1M' : 
-                       range === '6months' ? '6M' : '1Y'}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
+          <View style={styles.timeRangeSelector}>
+            {(['all', 'week', 'month', '6months', 'year'] as const).map((range) => (
+              <Pressable
+                key={range}
+                style={[styles.timeRangeButton, timeRange === range && styles.timeRangeButtonSelected]}
+                onPress={() => setTimeRange(range)}>
+                <Text style={[styles.timeRangeButtonText, timeRange === range && styles.timeRangeButtonTextSelected]}>
+                  {range === 'all' ? 'All' : 
+                   range === 'week' ? '1W' : 
+                   range === 'month' ? '1M' : 
+                   range === '6months' ? '6M' : '1Y'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-              <Text style={styles.subtitle}>Progress Chart</Text>
-              <Chart data={chartData} selectedLift={selectedLift} />
-            </BlurView>
+          <Text style={styles.subtitle}>Progress Chart</Text>
 
-            <View style={styles.filterHeader}>
-              <Text style={styles.sectionTitle}>Recent Calculations</Text>
-              <View style={styles.headerActions}>
-                <Pressable onPress={() => setIsFilterVisible(true)} style={styles.iconButton}>
-                  <Filter size={20} color="#B8B8B8" />
-                </Pressable>
-              </View>
-            </View>
+          <View style={styles.chartContainer}>
+            <VictoryChart
+              height={220}
+              width={screenWidth - 64}
+              padding={{ top: 20, bottom: 40, left: 50, right: 30 }}
+              domainPadding={{ x: [20, 20], y: [20, 20] }}
+              scale={{ x: "time", y: "linear" }}
+              domain={{ y: chartYDomain }}
+            >
+              <Defs>
+                <LinearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.3" />
+                  <Stop offset="100%" stopColor={LIFT_COLORS[selectedLift]} stopOpacity="0.05" />
+                </LinearGradient>
+              </Defs>
 
-            <BlurView intensity={20} tint="dark" style={styles.card}>
-              <View style={styles.historyList}>
-                {sortedList.map((entry) => (
-                  <HistoryItem
-                    key={entry.id}
-                    date={entry.date}
-                    weight={entry.weight}
-                    reps={entry.reps}
-                    oneRM={entry.oneRM}
-                    rpe={entry.rpe}
-                    onLongPress={() => handleLongPress(entry)}
+              <VictoryAxis
+                scale="time"
+                tickFormat={(x) => formatTick(x)}
+                style={{
+                  axis: { stroke: '#525252' },
+                  grid: { stroke: '#52525220' },
+                  tickLabels: {
+                    fill: '#B8B8B8',
+                    fontSize: 10,
+                    angle: -45,
+                    textAnchor: 'end',
+                    padding: 5
+                  }
+                }}
+              />
+              <VictoryAxis
+                dependentAxis
+                tickFormat={(y) => `${Math.round(y)}kg`}
+                style={{
+                  axis: { stroke: '#525252' },
+                  grid: { stroke: '#52525220' },
+                  tickLabels: {
+                    fill: '#B8B8B8',
+                    fontSize: 10,
+                    padding: 5
+                  }
+                }}
+              />
+              
+              {chartData.length > 0 ? (
+                <>
+                  <VictoryArea
+                    data={chartData}
+                    interpolation="basis"
+                    style={{ data: { fill: "url(#chartGradient)", stroke: "transparent" } }}
+                    groupComponent={<VictoryClipContainer clipPadding={{ top: 5, right: 5 }} />}
                   />
-                ))}
-              </View>
-            </BlurView>
-          </>
-        ) : (
-          <BlurView intensity={20} tint="dark" style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No calculations yet</Text>
-          </BlurView>
-        )}
+                  <VictoryLine
+                    data={chartData}
+                    interpolation="basis"
+                    style={{ data: { stroke: LIFT_COLORS[selectedLift], strokeWidth: 2, strokeLinecap: "round" } }}
+                  />
+                  <VictoryScatter
+                    data={chartData}
+                    size={4}
+                    style={{
+                      data: {
+                        fill: LIFT_COLORS[selectedLift],
+                        stroke: "#111111",
+                        strokeWidth: 1
+                      }
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <VictoryLine
+                    data={emptyChartData}
+                    style={{
+                      data: {
+                        stroke: '#525252',
+                        strokeWidth: 2,
+                        strokeDasharray: '5,5'
+                      }
+                    }}
+                  />
+                  <VictoryScatter
+                    data={emptyChartData}
+                    size={4}
+                    style={{
+                      data: {
+                        fill: '#525252',
+                        stroke: "#111111",
+                        strokeWidth: 1
+                      }
+                    }}
+                  />
+                </>
+              )}
+            </VictoryChart>
+          </View>
+
+          {chartData.length === 0 && (
+            <View style={styles.emptyChartOverlay}>
+              <Text style={styles.emptyChartText}>No data available</Text>
+              <Text style={styles.emptyChartSubtext}>Start tracking your lifts to see progress</Text>
+            </View>
+          )}
+        </BlurView>
+
+        <View style={styles.filterHeader}>
+          <Text style={styles.sectionTitle}>Recent Calculations</Text>
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => setIsFilterVisible(true)} style={styles.iconButton}>
+              <Filter size={20} color="#B8B8B8" />
+            </Pressable>
+          </View>
+        </View>
+
+        <BlurView intensity={20} tint="dark" style={styles.card}>
+          <View style={styles.historyList}>
+            {sortedList.map((entry) => (
+              <HistoryItem
+                key={entry.id}
+                date={entry.date}
+                weight={entry.weight}
+                reps={entry.reps}
+                oneRM={entry.oneRM}
+                rpe={entry.rpe}
+                onLongPress={() => handleLongPress(entry)}
+              />
+            ))}
+          </View>
+        </BlurView>
       </ScrollView>
 
       <CustomDatePicker
@@ -982,6 +1015,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 8,
     marginVertical: 8,
+    position: 'relative',
   },
   liftSelector: {
     flexDirection: 'row',
@@ -1450,5 +1484,28 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: '600',
+  },
+  emptyChartOverlay: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -100 }, { translateY: -30 }],
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 200,
+    zIndex: 1,
+  },
+  emptyChartText: {
+    color: '#525252',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  emptyChartSubtext: {
+    color: '#525252',
+    fontSize: 14,
+    textAlign: 'center',
+    opacity: 0.8,
   },
 });
