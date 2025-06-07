@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, Pressable, Modal, TouchableOpacity } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,7 +48,7 @@ const formulas: { [key: string]: Formula } = {
 const GradientBox = ({ children, color }: { children: React.ReactNode; color: string }) => (
   <View style={styles.gradientWrapper}>
     <LinearGradient
-      colors={[`${color}30`, '#52525210']}  // Cambiado esto
+      colors={[`${color}30`, '#52525210']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBorder}
@@ -63,57 +63,110 @@ export default function Calculator() {
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rpe, setRpe] = useState('');
-  const [rmValues, setRmValues] = useState<number[] | null[]>(Array.from({ length: 20 }, () => null));
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'selecting'>('idle');
   const [showLiftModal, setShowLiftModal] = useState(false);
   const [selectedLift, setSelectedLift] = useState<LiftType>('squat');
   const { selectedFormulas } = useFormulas();
 
-  const handleWeightChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue.length <= 3) {
-      setWeight(numericValue);
+  // Optimized input handlers with useCallback to prevent re-renders
+  const handleWeightChange = useCallback((text: string) => {
+    // Allow decimal numbers and limit to reasonable length
+    const cleanText = text.replace(/[^0-9.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = cleanText.split('.');
+    if (parts.length > 2) return;
+    
+    // Limit total length
+    if (cleanText.length <= 6) {
+      setWeight(cleanText);
       setSaveStatus('idle');
     }
-  };
+  }, []);
 
-  const handleRepsChange = (text: string) => {
+  const handleRepsChange = useCallback((text: string) => {
     const numericValue = text.replace(/[^0-9]/g, '');
     if (numericValue.length <= 3) {
       setReps(numericValue);
       setSaveStatus('idle');
     }
-  };
+  }, []);
 
-  const handleRPEChange = (text: string) => {
-    const numericValue = text.replace(/[^0-9]/g, '');
-    if (numericValue) {
-      const value = parseInt(numericValue, 10);
-      if (value >= 1 && value <= 10) {
-        setRpe(numericValue);
-      }
-    } else {
+  const handleRPEChange = useCallback((text: string) => {
+    // Allow decimal for RPE (e.g., 8.5)
+    const cleanText = text.replace(/[^0-9.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = cleanText.split('.');
+    if (parts.length > 2) return;
+    
+    if (cleanText === '') {
       setRpe('');
+      setSaveStatus('idle');
+      return;
     }
-    setSaveStatus('idle');
-  };
+    
+    const value = parseFloat(cleanText);
+    if (!isNaN(value) && value >= 0 && value <= 10) {
+      setRpe(cleanText);
+      setSaveStatus('idle');
+    }
+  }, []);
 
-  const calculateOneRM = (w: number, r: number) => {
+  // Memoized calculation function
+  const calculateOneRM = useCallback((w: number, r: number) => {
     if (r === 1) return w;
     
     const oneRMs = selectedFormulas.map(formulaId => 
       formulas[formulaId].calculate(w, r)
     );
     return oneRMs.reduce((a, b) => a + b, 0) / oneRMs.length;
-  };
+  }, [selectedFormulas]);
 
-  const handleSavePress = () => {
+  // Memoized RM values calculation
+  const rmValues = useMemo(() => {
+    if (!weight || !reps) {
+      return Array.from({ length: 20 }, () => null);
+    }
+
+    const w = parseFloat(weight);
+    const r = parseFloat(reps);
+
+    if (isNaN(w) || isNaN(r) || w <= 0 || r <= 0) {
+      return Array.from({ length: 20 }, () => null);
+    }
+
+    if (r === 1) {
+      return Array.from({ length: 20 }, (_, i) => {
+        if (i === 0) return w;
+        const repFactor = 1 - (i * 0.025);
+        return w * repFactor;
+      });
+    } else {
+      const avgOneRM = calculateOneRM(w, r);
+      return Array.from({ length: 20 }, (_, i) => {
+        const repFactor = 1 - (i * 0.025);
+        return avgOneRM * repFactor;
+      });
+    }
+  }, [weight, reps, calculateOneRM]);
+
+  // Memoized rows calculation
+  const rows = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < 20; i += 4) {
+      result.push(rmValues.slice(i, i + 4));
+    }
+    return result;
+  }, [rmValues]);
+
+  const handleSavePress = useCallback(() => {
     if (!weight || !reps || rmValues.length === 0) return;
     setShowLiftModal(true);
     setSaveStatus('selecting');
-  };
+  }, [weight, reps, rmValues.length]);
 
-  const confirmSaveCalculation = async (liftType: LiftType) => {
+  const confirmSaveCalculation = useCallback(async (liftType: LiftType) => {
     try {
       setSaveStatus('saving');
       setSelectedLift(liftType);
@@ -122,13 +175,13 @@ export default function Calculator() {
       const numericRpe = rpe && !isNaN(Number(rpe)) ? Number(rpe) : undefined;
 
       const newEntry = {
-        date: new Date().toLocaleString(),
-        weight: parseFloat(weight),
-        reps: parseFloat(reps),
-        oneRM: rmValues[0] || parseFloat(weight),
+        date: new Date().toISOString(),
+        weight: parseFloat(weight) || null,
+        reps: parseFloat(reps) || null,
+        oneRM: rmValues[0] || parseFloat(weight) || 0,
         rpe: numericRpe,
         liftType: liftType,
-        id: Date.now().toString(),
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       };
 
       const existingHistory = await AsyncStorage.getItem('calculationHistory');
@@ -142,43 +195,16 @@ export default function Calculator() {
       console.error('Error saving calculation:', error);
       setSaveStatus('idle');
     }
-  };
+  }, [weight, reps, rpe, rmValues]);
 
-  useEffect(() => {
-    if (weight && reps) {
-      const w = parseFloat(weight);
-      const r = parseFloat(reps);
-
-      if (!isNaN(w) && !isNaN(r)) {
-        if (r === 1) {
-          const newRmValues = Array.from({ length: 20 }, (_, i) => {
-            if (i === 0) return w;
-            const repFactor = 1 - (i * 0.025);
-            return w * repFactor;
-          });
-          setRmValues(newRmValues);
-        } else {
-          const avgOneRM = calculateOneRM(w, r);
-          const newRmValues = Array.from({ length: 20 }, (_, i) => {
-            const repFactor = 1 - (i * 0.025);
-            return avgOneRM * repFactor;
-          });
-          setRmValues(newRmValues);
-        }
-      }
-    } else {
-      setRmValues(Array.from({ length: 20 }, () => null));
-    }
-  }, [weight, reps, selectedFormulas]);
-
-  const rows = [];
-  for (let i = 0; i < 20; i += 4) {
-    rows.push(rmValues.slice(i, i + 4));
-  }
+  const handleModalClose = useCallback(() => {
+    setShowLiftModal(false);
+    setSaveStatus('idle');
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}>1RM Calculator</Text>
 
         <BlurView intensity={20} tint="dark" style={styles.card}>
@@ -190,10 +216,12 @@ export default function Calculator() {
                   style={styles.input}
                   value={weight}
                   onChangeText={handleWeightChange}
-                  keyboardType="numeric"
-                  maxLength={3}
+                  keyboardType="decimal-pad"
+                  maxLength={6}
                   placeholderTextColor="#666"
                   placeholder="Weight"
+                  returnKeyType="next"
+                  blurOnSubmit={false}
                 />
               </View>
             </View>
@@ -204,10 +232,12 @@ export default function Calculator() {
                   style={styles.input}
                   value={reps}
                   onChangeText={handleRepsChange}
-                  keyboardType="numeric"
-                  maxLength={2}
+                  keyboardType="number-pad"
+                  maxLength={3}
                   placeholderTextColor="#666"
                   placeholder="Reps"
+                  returnKeyType="next"
+                  blurOnSubmit={false}
                 />
               </View>
             </View>
@@ -218,40 +248,41 @@ export default function Calculator() {
                   style={styles.input}
                   value={rpe}
                   onChangeText={handleRPEChange}
-                  keyboardType="numeric"
-                  maxLength={2}
+                  keyboardType="decimal-pad"
+                  maxLength={4}
                   placeholderTextColor="#666"
                   placeholder="1-10"
+                  returnKeyType="done"
                 />
               </View>
             </View>
           </View>
 
-          {rmValues.length > 0 && (
+          {rmValues.some(val => val !== null) && (
             <Pressable
-            onPress={handleSavePress}
-            style={({ pressed }) => [
-              styles.saveButton,
-              saveStatus === 'saved' && styles.saveButtonSuccess,
-              pressed && styles.saveButtonPressed
-            ]}>
-            <LinearGradient
-              colors={saveStatus === 'saved' ? ['#DBFF00', '#DBFF00'] : ['#1a1a1a', '#1a1a1a']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.saveButtonGradient}>
-              <View style={styles.saveButtonContent}>
-                <Text style={[
-                  styles.saveButtonText,
-                  saveStatus === 'saved' && styles.saveButtonTextSuccess
-                ]}>
-                  {saveStatus === 'saving' ? 'Saving...' :
-                    saveStatus === 'saved' ? 'Saved!' :
-                      'Save Calculation'}
-                </Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+              onPress={handleSavePress}
+              style={({ pressed }) => [
+                styles.saveButton,
+                saveStatus === 'saved' && styles.saveButtonSuccess,
+                pressed && styles.saveButtonPressed
+              ]}>
+              <LinearGradient
+                colors={saveStatus === 'saved' ? ['#DBFF00', '#DBFF00'] : ['#1a1a1a', '#1a1a1a']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.saveButtonGradient}>
+                <View style={styles.saveButtonContent}>
+                  <Text style={[
+                    styles.saveButtonText,
+                    saveStatus === 'saved' && styles.saveButtonTextSuccess
+                  ]}>
+                    {saveStatus === 'saving' ? 'Saving...' :
+                      saveStatus === 'saved' ? 'Saved!' :
+                        'Save Calculation'}
+                  </Text>
+                </View>
+              </LinearGradient>
+            </Pressable>
           )}
         </BlurView>
 
@@ -282,15 +313,11 @@ export default function Calculator() {
         </BlurView>
       </ScrollView>
 
-      {/* Modal para seleccionar tipo de levantamiento */}
       <Modal
         visible={showLiftModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => {
-          setShowLiftModal(false);
-          setSaveStatus('idle');
-        }}>
+        onRequestClose={handleModalClose}>
         <View style={styles.modalOverlay}>
           <BlurView intensity={20} tint="dark" style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Lift Type</Text>
@@ -308,10 +335,7 @@ export default function Calculator() {
             
             <TouchableOpacity
               style={styles.modalCancel}
-              onPress={() => {
-                setShowLiftModal(false);
-                setSaveStatus('idle');
-              }}>
+              onPress={handleModalClose}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </BlurView>
@@ -371,9 +395,10 @@ const styles = StyleSheet.create({
   },
   input: {
     color: '#B8B8B8',
-    padding: 10,
+    padding: 12,
     fontSize: 16,
     textAlign: 'center',
+    minHeight: 44,
   },
   rmRow: {
     flexDirection: 'row',
@@ -468,7 +493,6 @@ const styles = StyleSheet.create({
   saveButtonTextSuccess: {
     color: '#111111',
   },
-  // Estilos para el modal
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
