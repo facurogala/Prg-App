@@ -1,15 +1,23 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
-    "slug": "bolt-expo-nativewind",
+    "name": "lift-tracker",
+    "slug": "lift-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "lift-tracker",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lifttracker.app"
+    },
+    "android": {
+      "package": "com.lifttracker.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#111111"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -29,9 +37,6 @@
       "eas": {
         "projectId": "30844074-9cd4-4f8d-b806-ad865e6e8139"
       }
-    },
-    "android": {
-      "package": "Prg.app"
     }
   }
 }
