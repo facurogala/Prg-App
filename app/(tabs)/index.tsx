@@ -57,7 +57,7 @@ const GradientBox = ({ children, color }: { children: React.ReactNode; color: st
       end={{ x: 1, y: 1 }}
       style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 12 }}
     />
-    <View style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 8, margin: 1 }}>
+    <View style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 8, margin: 1, textAlign: 'center' }}>
       {children}
     </View>
   </View>
@@ -207,6 +207,9 @@ export default function Calculator() {
     setSelectedDate(new Date());
   }, []);
 
+
+const isSaveEnabled = !!weight && !!reps && Number(weight) > 0 && Number(reps) > 0;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#111111' }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -332,49 +335,59 @@ export default function Calculator() {
               </View>
 
               {/* BOTÓN SAVE DEBAJO DE LOS INPUTS */}
-              {rmValues.some(val => val !== null) && (
-                <Pressable
-                  onPress={handleSavePress}
-                  style={{
-                    marginTop: 24,
-                    height: 44,
-                    borderRadius: 22,
-                    overflow: 'hidden',
-                    alignSelf: 'center',
-                    width: '80%',
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                  }}>
-                  <LinearGradient
-                    colors={saveStatus === 'saved' ? ['#DBFF00', '#DBFF00'] : ['#1a1a1a', '#1a1a1a']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ flex: 1, padding: 1 }}>
-                    <View style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: 'transparent',
-                      borderRadius: 21,
-                    }}>
-                      <Text style={{
-                        color: saveStatus === 'saved' ? '#111111' : '#B8B8B8',
-                        fontSize: 15,
-                        fontWeight: '600',
-                        letterSpacing: 0.5,
-                      }}>
-                        {saveStatus === 'saving' ? 'Saving...' :
-                          saveStatus === 'saved' ? 'Saved!' :
-                            'Save Calculation'}
-                      </Text>
-                    </View>
-                  </LinearGradient>
-                </Pressable>
-              )}
+  
+   <Pressable
+  onPress={isSaveEnabled ? handleSavePress : undefined}
+  style={{
+    marginTop: 24,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    width: '80%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    opacity: isSaveEnabled ? 1 : 0.4,
+    backgroundColor: '#1a1a1a'
+  }}
+>
+  <LinearGradient
+    colors={saveStatus === 'saved'
+      ? ['#DBFF00', '#DBFF00']
+      : ['#1a1a1a', '#1a1a1a']}
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={{ flex: 1, padding: 1 }}
+  >
+    <View style={{
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+      borderRadius: 21,
+    }}>
+      <Text style={{
+        color: saveStatus === 'saved'
+          ? '#111111'
+          : isSaveEnabled
+            ? '#B8B8B8'
+            : '#666',
+        fontSize: 15,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+      }}>
+        {saveStatus === 'saving' ? 'Saving...' :
+          saveStatus === 'saved' ? 'Saved!' :
+            'Save Calculation'}
+      </Text>
+    </View>
+  </LinearGradient>
+</Pressable>
+
             </BlurView>
 
             <Text style={{
@@ -677,6 +690,7 @@ export default function Calculator() {
     </SafeAreaView>
   );
 }
+
 
 
 const styles = StyleSheet.create({
