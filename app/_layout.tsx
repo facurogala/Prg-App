@@ -1,30 +1,32 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { FormulaProvider } from '../contexts/FormulaProvider';
 
 export default function TabLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: '#111111',
-            borderTopWidth: 0,
-          },
-          tabBarActiveTintColor: '#DBFF00',
-          tabBarInactiveTintColor: '#666',
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Calculator',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calculator" size={size} color={color} />
-            ),
+      <FormulaProvider>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: {
+              backgroundColor: '#111111',
+              borderTopWidth: 0,
+            },
+            tabBarActiveTintColor: '#DBFF00',
+            tabBarInactiveTintColor: '#666',
           }}
-        />
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'Calculator',
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="calculator" size={size} color={color} />
+              ),
+            }}
+          />
         <Tabs.Screen
           name="history"
           options={{
@@ -43,7 +45,8 @@ export default function TabLayout() {
             ),
           }}
         />
-      </Tabs>
+        </Tabs>
+      </FormulaProvider>
     </GestureHandlerRootView>
   );
 }
